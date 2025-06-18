@@ -5,6 +5,8 @@
 
 <!-- badges: start -->
 
+[![R-CMD-check](https://github.com/umr-marbec/isisinsight/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/umr-marbec/isisinsight/actions/workflows/R-CMD-check.yaml)
+[![test-coverage](https://github.com/umr-marbec/isisinsight/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/umr-marbec/isisinsight/actions/workflows/test-coverage.yaml)
 <!-- badges: end -->
 
 This package aims to provide processes for exploring outputs from the
