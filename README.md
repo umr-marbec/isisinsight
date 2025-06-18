@@ -5,7 +5,9 @@
 
 <!-- badges: start -->
 
+[![License](https://img.shields.io/badge/license-GPL--3-blue.svg)](https://github.com/umr-marbec/isisinsight)
 [![R-CMD-check](https://github.com/umr-marbec/isisinsight/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/umr-marbec/isisinsight/actions/workflows/R-CMD-check.yaml)
+[![Issues](https://img.shields.io/github/issues/umr-marbec/isisinsight/isisinsight.svg)](https://github.com/umr-marbec/isisinsight/issues)
 [![test-coverage](https://github.com/umr-marbec/isisinsight/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/umr-marbec/isisinsight/actions/workflows/test-coverage.yaml)
 <!-- badges: end -->
 
