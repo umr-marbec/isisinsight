@@ -1,0 +1,5 @@
+colname,type
+step,i
+fleet,c
+metier,c
+value,d

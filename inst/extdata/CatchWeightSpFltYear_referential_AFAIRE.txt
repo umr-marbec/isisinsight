@@ -1,0 +1,7 @@
+colname,type
+pop,c
+fleet,c
+metier,c
+zonePop,
+step_quarter,
+value,d

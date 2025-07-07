@@ -1,8 +1,16 @@
+#' @title ISIS-Fish outputs simulations formatting
+#' @description
+#' Function for ISIS-Fish outputs simulations formatting and manipulation.
+#' @param directory_path Mandatory. Class character expected. Directory path of the ISIS-Fish outputs simulations.
+#' @return The function returns a list with a length in relation to the number of simulation directory provided. Each element of the list has information about metadata and data (original and improved) associated with the simulation.
+#' @export
+#' @examples
+#' #replace the value of directory_path by a correct path
+#' try(outputs_simulations_settings(directory_path = "my/path/to/simulations/directory"))
+#'
 outputs_simulations_settings <- function(directory_path) {
-  #directory_path <- "N:/projet_theme/isis_fish/data/ExportsSimulationsScenariosMACCO"
-  #directory_path <- "D:/projet_theme/isis_fish/data/ExportsSimulationsScenariosMACCO"
   # 1 - Global variable assignment ----
-
+  # Empty for now
   # 2 - Global argument check ----
   if (missing(x = directory_path)
       || ! inherits(x = directory_path,
@@ -21,9 +29,13 @@ outputs_simulations_settings <- function(directory_path) {
                 "%Y-%m-%d %H:%M:%S"),
          " - Error, no input simulation available in the directory path.")
   }
-  simulations_data <- vector(mode = "list")
+  simulation_final <- list()
   for (simulation_directory_id in seq_len(length.out = length(x = simulations_directory))) {
-    simulation_directory_name <- simulations_directory[1]
+    simulation_directory_name <- simulations_directory[simulation_directory_id]
+    message(format(x = Sys.time(),
+                   "%Y-%m-%d %H:%M:%S"),
+            " - Start data import from simulation directory ",
+            simulation_directory_name)
     current_simulation_metadata <- list("project_name" = stringr::str_extract(string = simulation_directory_name,
                                                                               pattern =  "(?<=sim_)[[:upper:]]+(?=_)"),
                                         "simulation_configuration" = stringr::str_match(simulation_directory_name,
@@ -46,13 +58,61 @@ outputs_simulations_settings <- function(directory_path) {
       current_directory_path_files <- list.files(path = current_directory_path)
       current_directory_path_files_csv <- current_directory_path_files[stringr::str_which(string = current_directory_path_files,
                                                                                           pattern = ".csv$")]
+      current_simulation_data_ori <- list()
+      for (current_directory_path_files_csv_id in seq_len(length.out = length(x = current_directory_path_files_csv))) {
+        if (stringr::str_replace(string = current_directory_path_files_csv[current_directory_path_files_csv_id],
+                                 pattern = ".csv",
+                                 replacement = "_referential.txt") %in% list.files(path = system.file("extdata",
+                                                                                                      package = "isisinsight"))) {
+          current_referential <- readr::read_delim(file = system.file("extdata",
+                                                                      stringr::str_replace(string = current_directory_path_files_csv[current_directory_path_files_csv_id],
+                                                                                           pattern = ".csv",
+                                                                                           replacement = "_referential.txt"),
+                                                                      package = "isisinsight"),
+                                                   show_col_types = FALSE)
 
 
 
-
+          current_csv_data  <- list(readr::read_delim(file = file.path(current_directory_path,
+                                                                       current_directory_path_files_csv[current_directory_path_files_csv_id]),
+                                                      col_names = current_referential$colname,
+                                                      delim = ";",
+                                                      col_types = paste0(current_referential$type,
+                                                                         collapse = ""),
+                                                      locale = readr::locale(decimal_mark = ".")))
+          names(x = current_csv_data) <- stringr::str_match(string = current_directory_path_files_csv[current_directory_path_files_csv_id],
+                                                            pattern = "(.+)\\.csv$")[, 2]
+          current_simulation_data_ori <- c(current_simulation_data_ori,
+                                           current_csv_data)
+        } else {
+          warning(format(x = Sys.time(),
+                         "%Y-%m-%d %H:%M:%S"),
+                  " - Warning, no referential available for \"",
+                  current_directory_path_files_csv[current_directory_path_files_csv_id],
+                  "\" of the simulation directory name \"",
+                  simulation_directory_name,
+                  "\". Input data avoided.",
+                  immediate. = TRUE)
+          current_csv_data <- list(NULL)
+          names(x = current_csv_data) <- stringr::str_match(string = current_directory_path_files_csv[current_directory_path_files_csv_id],
+                                                            pattern = "(.+)\\.csv$")[, 2]
+          current_simulation_data_ori <- c(current_simulation_data_ori,
+                                           current_csv_data)
+        }
+      }
+      current_simulation_data <- list("data_ori" = current_simulation_data_ori)
     } else {
-      current_data <- list("data" = NULL)
+      current_simulation_data <- list("data_ori" = NULL)
     }
-
+    current_simulation_final <- list(list("simulation_metadata" = current_simulation_metadata,
+                                          "data" = current_simulation_data))
+    names(x = current_simulation_final) <- simulation_directory_name
+    simulation_final <- c(simulation_final,
+                          current_simulation_final)
+    message(format(x = Sys.time(),
+                   "%Y-%m-%d %H:%M:%S"),
+            " - Successful data import from simulation directory ",
+            simulation_directory_name)
   }
+  return(simulation_final)
 }

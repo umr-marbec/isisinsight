@@ -1,0 +1,4 @@
+colname,type
+pop,c
+step,i
+value,d

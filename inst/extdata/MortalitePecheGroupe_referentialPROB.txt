@@ -1,0 +1,5 @@
+colname,type
+pop,c
+step,i
+fish_group,i
+value,d

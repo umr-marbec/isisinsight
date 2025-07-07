@@ -1,0 +1,5 @@
+colname,type
+pop,c
+year,i
+group,i
+value,d

@@ -1,0 +1,5 @@
+colname,type
+pop,c
+fleet,c
+step,i
+value,d
