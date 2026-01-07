@@ -2,6 +2,6 @@ colname,type
 pop,c
 fleet,c
 metier,c
-zonePop,
-step_quarter,
+zonePop,c
+step_quarter,i
 value,d

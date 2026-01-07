@@ -70,9 +70,6 @@ outputs_simulations_settings <- function(directory_path) {
                                                                                            replacement = "_referential.txt"),
                                                                       package = "isisinsight"),
                                                    show_col_types = FALSE)
-
-
-
           current_csv_data  <- list(readr::read_delim(file = file.path(current_directory_path,
                                                                        current_directory_path_files_csv[current_directory_path_files_csv_id]),
                                                       col_names = current_referential$colname,
