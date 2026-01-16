@@ -1,4 +1,5 @@
 colname,type
-pop,c
+population,c
 step,i
+fish_group,i
 value,d

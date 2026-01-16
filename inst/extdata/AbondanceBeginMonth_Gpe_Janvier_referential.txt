@@ -1,5 +1,5 @@
 colname,type
-pop,c
+population,c
 year,i
 group,i
 value,d

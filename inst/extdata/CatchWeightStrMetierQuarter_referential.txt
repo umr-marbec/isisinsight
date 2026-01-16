@@ -1,7 +1,6 @@
 colname,type
-pop,c
+population,c
 fleet,c
 metier,c
-zone_population,c
 step_quarter,i
 value,d

@@ -1,6 +1,0 @@
-colname,type
-pop,c
-fleet,
-metier,
-step_quarter,
-value,

@@ -1,5 +1,4 @@
 colname,type
-pop,c
-fleet,c
+population,c
 step,i
 value,d

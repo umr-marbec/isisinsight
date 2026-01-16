@@ -1,0 +1,8 @@
+simulation_name,scenario_name
+Mesure1,O-D-3_miles
+Mesure2,O-G-Frayere
+Mesure3-1,G-Trim1
+Mesure3-2,G-Fevr
+Mesure3-3,G-1/3-Trim1
+Ref,BAU
+ssZBS,SansRien

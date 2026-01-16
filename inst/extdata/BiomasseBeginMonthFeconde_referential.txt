@@ -1,6 +1,6 @@
 colname,type
-pop,c
+population,c
 fish_group,i
-zonePop,c
+zone_population,c
 step,i
 value,d
