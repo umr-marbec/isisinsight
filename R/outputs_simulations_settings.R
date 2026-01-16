@@ -10,6 +10,13 @@
 #'
 outputs_simulations_settings <- function(directory_path) {
   # 1 - Global variable assignment ----
+  population <- NULL
+  scenario_name <- NULL
+  step <- NULL
+  value <- NULL
+  year <- NULL
+  zone_population <- NULL
+  simulation_name <- NULL
   # Empty for now
   # 2 - Global argument check ----
   if (missing(x = directory_path)

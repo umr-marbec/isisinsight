@@ -17,6 +17,7 @@ RoxygenNote: 7.3.3
 URL: https://github.com/umr-marbec/isisinsight, https://umr-marbec.github.io/isisinsight/
 BugReports: https://github.com/umr-marbec/isisinsight/issues
 Imports: 
+    dplyr (>= 1.1.4),
     lifecycle,
     lubridate (>= 1.9.4),
     magrittr,
