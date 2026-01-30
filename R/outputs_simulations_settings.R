@@ -101,23 +101,33 @@ outputs_simulations_settings <- function(directory_path) {
                                                 list(NULL))
           names(current_simulation_data_improved)[length(x = current_simulation_data_improved)] <- names(x = current_csv_data)
           if (current_directory_path_files_csv[current_directory_path_files_csv_id] == "BiomasseBeginMonthFeconde.csv") {
-            simulation_biomasse_feconde <- list(dplyr::filter(.data = current_csv_data[[1]],
-                                                              step %% 12 == 0
-                                                              & ! (zone_population %in% c("Zone_CelticSea",
-                                                                                          "Zone_NorthernArea"))) %>%
-                                                  dplyr::mutate(year = step / 12 + as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
-                                                                                                                       pattern = "^[[:digit:]]+")),
-                                                                population = dplyr::case_when(
-                                                                  population == "Lophius_piscatorius" ~ "Lophius",
-                                                                  .default = population
-                                                                )) %>%
-                                                  dplyr::summarise(biomass = sum(value),
-                                                                   .by = c(year,
-                                                                           population)) %>%
-                                                  dplyr::mutate(scenario_name = !!current_simulation_metadata$scenario_name))
-            names(simulation_biomasse_feconde) <- "simulation_biomasse_feconde"
+            simulation_biomass_fertile <- list(dplyr::filter(.data = current_csv_data[[1]],
+                                                             step %% 12 == 0
+                                                             & ! (zone_population %in% c("Zone_CelticSea",
+                                                                                         "Zone_NorthernArea"))) %>%
+                                                 dplyr::mutate(year = step / 12 + as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
+                                                                                                                      pattern = "^[[:digit:]]+")),
+                                                               population = dplyr::case_when(
+                                                                 population == "Lophius_piscatorius" ~ "Lophius",
+                                                                 .default = population
+                                                               )) %>%
+                                                 dplyr::summarise(biomass = sum(value),
+                                                                  .by = c(year,
+                                                                          population)) %>%
+                                                 dplyr::mutate(scenario_name = !!current_simulation_metadata$scenario_name))
+            names(simulation_biomass_fertile) <- "simulation_biomass_fertile"
             current_simulation_data_improved$BiomasseBeginMonthFeconde <- c(current_simulation_data_improved$BiomasseBeginMonthFeconde,
-                                                                            simulation_biomasse_feconde)
+                                                                            simulation_biomass_fertile)
+          }
+          if (current_directory_path_files_csv[current_directory_path_files_csv_id] == "AbondanceBeginMonth_Gpe_Janvier.csv") {
+            browser()
+
+
+
+            sim_abondance_gpe_janv <- file.path(dossier_simul,simPath1[s], "resultExports/AbondanceBeginMonth_Gpe_Janvier.csv") %>%
+              fread(data.table = FALSE, col.names = abondance_cols) %>%
+              mutate(abondance=value,sc_name = sc_newname_str[s]) %>%
+              mutate(pop=recode(pop,Lophius_piscatorius ="Lophius"))
           }
         } else {
           warning(format(x = Sys.time(),
