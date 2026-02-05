@@ -17,6 +17,9 @@ outputs_simulations_settings <- function(directory_path) {
   year <- NULL
   zone_population <- NULL
   simulation_name <- NULL
+  step_quarter <- NULL
+  fleet <- NULL
+  catch <- NULL
   # Empty for now
   # 2 - Global argument check ----
   if (missing(x = directory_path)
@@ -120,14 +123,87 @@ outputs_simulations_settings <- function(directory_path) {
                                                                             simulation_biomass_fertile)
           }
           if (current_directory_path_files_csv[current_directory_path_files_csv_id] == "AbondanceBeginMonth_Gpe_Janvier.csv") {
+            simulation_abundance_gpe_january <-  list(dplyr::mutate(.data = current_csv_data[[1]],
+                                                                    population = dplyr::case_when(
+                                                                      population == "Lophius_piscatorius" ~ "Lophius",
+                                                                      .default = population),
+                                                                    scenario_name = !!current_simulation_metadata$scenario_name))
+            names(simulation_abundance_gpe_january) <- "simulation_abundance_gpe_january"
+            simulation_abundance_january <- list(dplyr::summarise(.data = current_csv_data[[1]],
+                                                                  abundance = sum(value),
+                                                                  .by = c(population,
+                                                                          year)) %>%
+                                                   dplyr::mutate(population = dplyr::case_when(
+                                                     population == "Lophius_piscatorius" ~ "Lophius",
+                                                     .default = population),
+                                                     scenario_name = !!current_simulation_metadata$scenario_name))
+            names(simulation_abundance_january) <- "simulation_abundance_january"
+            current_simulation_data_improved$AbondanceBeginMonth_Gpe_Janvier <- c(current_simulation_data_improved$AbondanceBeginMonth_Gpe_Janvier,
+                                                                                  simulation_abundance_gpe_january,
+                                                                                  simulation_abundance_january)
+          }
+          if (current_directory_path_files_csv[current_directory_path_files_csv_id] == "CatchWeightStrMetierQuarter.csv") {
+            simulation_catch_weight_fleet <- list(dplyr::mutate(.data = current_csv_data[[1]],
+                                                                step_quarter = step_quarter + 1,
+                                                                scenario_name = !!current_simulation_metadata$scenario_name) %>%
+                                                    dplyr::summarise(catch = sum(value),
+                                                                     .by = c(step_quarter,
+                                                                             population,
+                                                                             fleet,
+                                                                             scenario_name)) %>%
+                                                    dplyr::relocate(step_quarter,
+                                                                    .before = catch))
+            names(simulation_catch_weight_fleet) <- "simulation_catch_weight_fleet"
+            current_simulation_data_improved$CatchWeightStrMetierQuarter <- c(current_simulation_data_improved$CatchWeightStrMetierQuarter,
+                                                                              simulation_catch_weight_fleet)
+          }
+          if (current_directory_path_files_csv[current_directory_path_files_csv_id] == "CatchWeightPopStrMetStep.csv") {
             browser()
 
+            simulation_catch_weight_fleet_month <- dplyr::rename(.data = current_csv_data[[1]],
+                                                                 catch = value) %>%
+              dplyr::mutate(step = step + 1,
+                            scenario_name = !!current_simulation_metadata$scenario_name,
+                            population = dplyr::case_when(
+                              population == "Lophius_piscatorius" ~ "Lophius",
+                              .default = population)) %>%
+              dplyr::relocate(scenario_name,
+                              .before = catch)
 
 
-            sim_abondance_gpe_janv <- file.path(dossier_simul,simPath1[s], "resultExports/AbondanceBeginMonth_Gpe_Janvier.csv") %>%
-              fread(data.table = FALSE, col.names = abondance_cols) %>%
-              mutate(abondance=value,sc_name = sc_newname_str[s]) %>%
-              mutate(pop=recode(pop,Lophius_piscatorius ="Lophius"))
+            # sim_catch_pds_fleet_mois_cum <- file.path(dossier_simul, simPath1[s],"resultExports/CatchWeightPopStrMetStep.csv") %>%
+            #   fread(data.table = FALSE,col.names = catchmois_cols) %>%
+            #   rename(catch=value) %>%
+            #   mutate(
+            #     year = as.integer(step / 12 + start_year)
+            #   ) %>%
+            #   group_by(pop,fleet,year) %>%
+            #   arrange(step) %>%
+            #   mutate(catchcum=cumsum(catch)) %>%
+            #   ungroup() %>%
+            #   mutate(step = step+1,
+            #          sc_name = sc_newname_str[s],
+            #          pop=recode(pop,Lophius_piscatorius ="Lophius")) %>%
+            #   select(-c(year,catch))
+            #
+            # sim_catch_pds_mois_cum <- file.path(dossier_simul, simPath1[s],"resultExports/CatchWeightPopStrMetStep.csv") %>%
+            #   fread(data.table = FALSE,col.names = catchmois_cols) %>%
+            #   rename(catch=value) %>%
+            #   mutate(
+            #     year = as.integer(step / 12 + start_year)
+            #   ) %>%
+            #   group_by(pop,year,step) %>% #somme sur les flottilles
+            #   mutate(catchtot=sum(catch)) %>%
+            #   select(pop,year,step,catchtot) %>%
+            #   distinct() %>%
+            #   ungroup() %>%
+            #   group_by(pop,year) %>%
+            #   arrange(step) %>%
+            #   mutate(catchcum=cumsum(catchtot)) %>%
+            #   ungroup() %>%
+            #   mutate(step = step+1,sc_name = sc_newname_str[s],
+            #          pop=recode(pop,Lophius_piscatorius ="Lophius")) %>%
+            #   select(-c(year,catchtot))
           }
         } else {
           warning(format(x = Sys.time(),
