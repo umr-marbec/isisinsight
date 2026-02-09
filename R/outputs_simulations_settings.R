@@ -20,6 +20,10 @@ outputs_simulations_settings <- function(directory_path) {
   step_quarter <- NULL
   fleet <- NULL
   catch <- NULL
+  catch_total <- NULL
+  fish_group <- NULL
+  group <- NULL
+  fishing_mortality <- NULL
   # Empty for now
   # 2 - Global argument check ----
   if (missing(x = directory_path)
@@ -158,52 +162,101 @@ outputs_simulations_settings <- function(directory_path) {
                                                                               simulation_catch_weight_fleet)
           }
           if (current_directory_path_files_csv[current_directory_path_files_csv_id] == "CatchWeightPopStrMetStep.csv") {
-            browser()
-
-            simulation_catch_weight_fleet_month <- dplyr::rename(.data = current_csv_data[[1]],
-                                                                 catch = value) %>%
-              dplyr::mutate(step = step + 1,
-                            scenario_name = !!current_simulation_metadata$scenario_name,
-                            population = dplyr::case_when(
-                              population == "Lophius_piscatorius" ~ "Lophius",
-                              .default = population)) %>%
-              dplyr::relocate(scenario_name,
-                              .before = catch)
-
-
-            # sim_catch_pds_fleet_mois_cum <- file.path(dossier_simul, simPath1[s],"resultExports/CatchWeightPopStrMetStep.csv") %>%
-            #   fread(data.table = FALSE,col.names = catchmois_cols) %>%
-            #   rename(catch=value) %>%
-            #   mutate(
-            #     year = as.integer(step / 12 + start_year)
-            #   ) %>%
-            #   group_by(pop,fleet,year) %>%
-            #   arrange(step) %>%
-            #   mutate(catchcum=cumsum(catch)) %>%
-            #   ungroup() %>%
-            #   mutate(step = step+1,
-            #          sc_name = sc_newname_str[s],
-            #          pop=recode(pop,Lophius_piscatorius ="Lophius")) %>%
-            #   select(-c(year,catch))
-            #
-            # sim_catch_pds_mois_cum <- file.path(dossier_simul, simPath1[s],"resultExports/CatchWeightPopStrMetStep.csv") %>%
-            #   fread(data.table = FALSE,col.names = catchmois_cols) %>%
-            #   rename(catch=value) %>%
-            #   mutate(
-            #     year = as.integer(step / 12 + start_year)
-            #   ) %>%
-            #   group_by(pop,year,step) %>% #somme sur les flottilles
-            #   mutate(catchtot=sum(catch)) %>%
-            #   select(pop,year,step,catchtot) %>%
-            #   distinct() %>%
-            #   ungroup() %>%
-            #   group_by(pop,year) %>%
-            #   arrange(step) %>%
-            #   mutate(catchcum=cumsum(catchtot)) %>%
-            #   ungroup() %>%
-            #   mutate(step = step+1,sc_name = sc_newname_str[s],
-            #          pop=recode(pop,Lophius_piscatorius ="Lophius")) %>%
-            #   select(-c(year,catchtot))
+            simulation_catch_weight_fleet_month <- list(dplyr::rename(.data = current_csv_data[[1]],
+                                                                      catch = value) %>%
+                                                          dplyr::mutate(step = step + 1,
+                                                                        scenario_name = !!current_simulation_metadata$scenario_name,
+                                                                        population = dplyr::case_when(
+                                                                          population == "Lophius_piscatorius" ~ "Lophius",
+                                                                          .default = population)) %>%
+                                                          dplyr::relocate(scenario_name,
+                                                                          .before = catch))
+            names(simulation_catch_weight_fleet_month) <- "simulation_catch_weight_fleet_month"
+            simulation_catch_weight_fleet_month_cumulative_sums <- list(dplyr::mutate(.data = simulation_catch_weight_fleet_month[[1]],
+                                                                                      year = as.integer(x = (step - 1) / 12 + as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
+                                                                                                                                                                  pattern = "^[[:digit:]]+")))) %>%
+                                                                          dplyr::group_by(population,
+                                                                                          fleet,
+                                                                                          year) %>%
+                                                                          dplyr::arrange(step) %>%
+                                                                          dplyr::mutate(catch_cumulative = cumsum(x = catch)) %>%
+                                                                          dplyr::ungroup() %>%
+                                                                          dplyr::select(-c(year,
+                                                                                           catch)))
+            names(simulation_catch_weight_fleet_month_cumulative_sums) <- "simulation_catch_weight_fleet_month_cumulative_sums"
+            simulation_catch_weight_month_cumulative_sums <- list(dplyr::mutate(.data = simulation_catch_weight_fleet_month[[1]],
+                                                                                year = as.integer(x = (step - 1) / 12 + as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
+                                                                                                                                                            pattern = "^[[:digit:]]+")))) %>%
+                                                                    dplyr::group_by(population,
+                                                                                    fleet,
+                                                                                    step) %>%
+                                                                    dplyr::mutate(catch_total = sum(catch)) %>%
+                                                                    dplyr::ungroup() %>%
+                                                                    dplyr::select(population,
+                                                                                  year,
+                                                                                  step,
+                                                                                  catch_total) %>%
+                                                                    dplyr::distinct() %>%
+                                                                    dplyr::group_by(population,
+                                                                                    year) %>%
+                                                                    dplyr::arrange(step) %>%
+                                                                    dplyr::mutate(catch_cumulative = cumsum(x = catch_total)) %>%
+                                                                    dplyr::ungroup() %>%
+                                                                    dplyr::select(-c(year,
+                                                                                     catch_total)))
+            names(simulation_catch_weight_month_cumulative_sums) <- "simulation_catch_weight_month_cumulative_sums"
+            current_simulation_data_improved$CatchWeightPopStrMetStep <- c(current_simulation_data_improved$CatchWeightPopStrMetStep,
+                                                                           simulation_catch_weight_fleet_month,
+                                                                           simulation_catch_weight_fleet_month_cumulative_sums,
+                                                                           simulation_catch_weight_month_cumulative_sums)
+          }
+          if (current_directory_path_files_csv[current_directory_path_files_csv_id] == "EffortsNominalMetier.csv") {
+            simulation_effort_nominal_gear_start_year <- list(dplyr::mutate(.data = current_csv_data[[1]],
+                                                                            year = as.integer(step / 12 + as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
+                                                                                                                                              pattern = "^[[:digit:]]+"))),
+                                                                            step = step + 1,
+                                                                            scenario_name = !!current_simulation_metadata$scenario_name) %>%
+                                                                dplyr::filter(year == as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
+                                                                                                                          pattern = "^[[:digit:]]+"))))
+            names(simulation_effort_nominal_gear_start_year) <- "simulation_effort_nominal_gear_start_year"
+            current_simulation_data_improved$EffortsNominalMetier <- c(current_simulation_data_improved$EffortsNominalMetier,
+                                                                       simulation_effort_nominal_gear_start_year)
+          }
+          if (current_directory_path_files_csv[current_directory_path_files_csv_id] == "MortalitePecheGroupe.csv") {
+            simulation_fishing_mortality_group <- list(dplyr::mutate(.data = current_csv_data[[1]],
+                                                                     year = as.integer(step / 12 + as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
+                                                                                                                                       pattern = "^[[:digit:]]+"))),
+                                                                     scenario_name = !!current_simulation_metadata$scenario_name,
+                                                                     population = dplyr::case_when(
+                                                                       population == "Lophius_piscatorius" ~ "Lophius",
+                                                                       .default = population)) %>%
+                                                         dplyr::rename(fishing_mortality = value,
+                                                                       group = fish_group) %>%
+                                                         dplyr::select(year,
+                                                                       population,
+                                                                       group,
+                                                                       fishing_mortality,
+                                                                       scenario_name))
+            names(simulation_fishing_mortality_group) <- "simulation_fishing_mortality_group"
+            current_simulation_data_improved$MortalitePecheGroupe <- c(current_simulation_data_improved$MortalitePecheGroupe,
+                                                                       simulation_fishing_mortality_group)
+          }
+          if (current_directory_path_files_csv[current_directory_path_files_csv_id] == "MortalitePecheTotale.csv") {
+            simulation_fishing_mortality_total <- list(dplyr::mutate(.data = current_csv_data[[1]],
+                                                                     year = as.integer(step / 12 + as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
+                                                                                                                                       pattern = "^[[:digit:]]+"))),
+                                                                     scenario_name = !!current_simulation_metadata$scenario_name,
+                                                                     population = dplyr::case_when(
+                                                                       population == "Lophius_piscatorius" ~ "Lophius",
+                                                                       .default = population)) %>%
+                                                         dplyr::rename(fishing_mortality = value) %>%
+                                                         dplyr::select(year,
+                                                                       population,
+                                                                       fishing_mortality,
+                                                                       scenario_name))
+            names(simulation_fishing_mortality_total) <- "simulation_fishing_mortality_total"
+            current_simulation_data_improved$MortalitePecheTotale <- c(current_simulation_data_improved$MortalitePecheTotale,
+                                                                       simulation_fishing_mortality_total)
           }
         } else {
           warning(format(x = Sys.time(),
