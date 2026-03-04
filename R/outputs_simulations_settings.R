@@ -43,7 +43,10 @@ outputs_simulations_settings <- function(directory_path) {
                 "%Y-%m-%d %H:%M:%S"),
          " - Error, no input simulation available in the directory path.")
   }
-  simulation_final <- list()
+  simulation_final <- vector("list",
+                             2)
+  names(simulation_final) <- c("simulations",
+                               "simulations_data_improved_merged")
   scenarios_names_referential <- readr::read_delim(file = system.file("extdata",
                                                                       "scenarios_names_referential.txt",
                                                                       package = "isisinsight"),
@@ -188,7 +191,7 @@ outputs_simulations_settings <- function(directory_path) {
                                                                                 year = as.integer(x = (step - 1) / 12 + as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
                                                                                                                                                             pattern = "^[[:digit:]]+")))) %>%
                                                                     dplyr::group_by(population,
-                                                                                    fleet,
+                                                                                    year,
                                                                                     step) %>%
                                                                     dplyr::mutate(catch_total = sum(catch)) %>%
                                                                     dplyr::ungroup() %>%
@@ -211,16 +214,16 @@ outputs_simulations_settings <- function(directory_path) {
                                                                            simulation_catch_weight_month_cumulative_sums)
           }
           if (current_directory_path_files_csv[current_directory_path_files_csv_id] == "EffortsNominalMetier.csv") {
-            simulation_effort_nominal_gear_start_year <- list(dplyr::mutate(.data = current_csv_data[[1]],
-                                                                            year = as.integer(step / 12 + as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
-                                                                                                                                              pattern = "^[[:digit:]]+"))),
-                                                                            step = step + 1,
-                                                                            scenario_name = !!current_simulation_metadata$scenario_name) %>%
-                                                                dplyr::filter(year == as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
-                                                                                                                          pattern = "^[[:digit:]]+"))))
-            names(simulation_effort_nominal_gear_start_year) <- "simulation_effort_nominal_gear_start_year"
+            simulation_effort_nominal_metier_start_year_month <- list(dplyr::mutate(.data = current_csv_data[[1]],
+                                                                                    year = as.integer(step / 12 + as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
+                                                                                                                                                      pattern = "^[[:digit:]]+"))),
+                                                                                    step = step + 1,
+                                                                                    scenario_name = !!current_simulation_metadata$scenario_name) %>%
+                                                                        dplyr::filter(year == as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
+                                                                                                                                  pattern = "^[[:digit:]]+"))))
+            names(simulation_effort_nominal_metier_start_year_month) <- "simulation_effort_nominal_metier_start_year_month"
             current_simulation_data_improved$EffortsNominalMetier <- c(current_simulation_data_improved$EffortsNominalMetier,
-                                                                       simulation_effort_nominal_gear_start_year)
+                                                                       simulation_effort_nominal_metier_start_year_month)
           }
           if (current_directory_path_files_csv[current_directory_path_files_csv_id] == "MortalitePecheGroupe.csv") {
             simulation_fishing_mortality_group <- list(dplyr::mutate(.data = current_csv_data[[1]],
@@ -283,8 +286,32 @@ outputs_simulations_settings <- function(directory_path) {
     current_simulation_final <- list(list("simulation_metadata" = current_simulation_metadata,
                                           "data" = current_simulation_data))
     names(x = current_simulation_final) <- simulation_directory_name
-    simulation_final <- c(simulation_final,
-                          current_simulation_final)
+    simulation_final$simulations <- c(simulation_final$simulations,
+                                      current_simulation_final)
+    if (length(x = current_simulation_final[[1]]$data$data_improved) != 0) {
+      if (length(x = simulation_final$simulations_data_improved_merged) == 0) {
+        simulation_final$simulations_data_improved_merged <- current_simulation_final[[1]]$data$data_improved
+      } else {
+        for (id_date_improved in seq_len(length.out = length(x = current_simulation_final[[1]]$data$data_improved))) {
+          if (names(x = current_simulation_final[[1]]$data$data_improved)[id_date_improved] %in% names(x = simulation_final$simulations_data_improved_merged)) {
+            current_id_simulations_data_improved_merged <- which(x = names(x = simulation_final$simulations_data_improved_merged) == names(x = current_simulation_final[[1]]$data$data_improved[id_date_improved]))
+            for (current_id_date_improved in seq_len(length.out = length(x = current_simulation_final[[1]]$data$data_improved[[id_date_improved]]))) {
+              if (names(x = current_simulation_final[[1]]$data$data_improved[[id_date_improved]][current_id_date_improved]) %in% names(x = simulation_final$simulations_data_improved_merged[[current_id_simulations_data_improved_merged]])) {
+                current_sub_id_simulations_data_improved_merged <- which(x = names(x = simulation_final$simulations_data_improved_merged[[current_id_simulations_data_improved_merged]]) == names(x = current_simulation_final[[1]]$data$data_improved[[id_date_improved]][current_id_date_improved]))
+                simulation_final$simulations_data_improved_merged[[current_id_simulations_data_improved_merged]][[current_sub_id_simulations_data_improved_merged]] <- dplyr::bind_rows(simulation_final$simulations_data_improved_merged[[current_id_simulations_data_improved_merged]][[current_sub_id_simulations_data_improved_merged]],
+                                                                                                                                                                                        current_simulation_final[[1]]$data$data_improved[[id_date_improved]][[current_id_date_improved]])
+              } else {
+                simulation_final$simulations_data_improved_merged[[current_id_simulations_data_improved_merged]] <- c(simulation_final$simulations_data_improved_merged[[current_id_simulations_data_improved_merged]],
+                                                                                                                      current_simulation_final[[1]]$data$data_improved[[id_date_improved]][current_id_date_improved])
+              }
+            }
+          } else {
+            simulation_final$simulations_data_improved_merged <- c(simulation_final$simulations_data_improved_merged,
+                                                                   current_simulation_final[[1]]$data$data_improved[id_date_improved])
+          }
+        }
+      }
+    }
     message(format(x = Sys.time(),
                    "%Y-%m-%d %H:%M:%S"),
             " - Successful data import from simulation directory ",
