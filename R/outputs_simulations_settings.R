@@ -2,13 +2,15 @@
 #' @description
 #' Function for ISIS-Fish outputs simulations formatting and manipulation.
 #' @param directory_path Mandatory. Class character expected. Directory path of the ISIS-Fish outputs simulations.
+#' @param output_path Optional. Default NULL. Output path for saved data from function element "simulations_data_improved_merged". If the value is NULL, nothing will be exported.
 #' @return The function returns a list with a length in relation to the number of simulation directory provided. Each element of the list has information about metadata and data (original and improved) associated with the simulation.
 #' @export
 #' @examples
 #' #replace the value of directory_path by a correct path
 #' try(outputs_simulations_settings(directory_path = "my/path/to/simulations/directory"))
 #'
-outputs_simulations_settings <- function(directory_path) {
+outputs_simulations_settings <- function(directory_path,
+                                         output_path = NULL) {
   # 1 - Global variable assignment ----
   population <- NULL
   scenario_name <- NULL
@@ -34,6 +36,14 @@ outputs_simulations_settings <- function(directory_path) {
                 "%Y-%m-%d %H:%M:%S"),
          " - Error, invalid \"directory_path\" argument.")
   }
+  if (! is.null(x = output_path)
+      && (! inherits(x = output_path,
+                     what = "character")
+          || length(x = output_path) != 1)) {
+    stop(format(x = Sys.time(),
+                "%Y-%m-%d %H:%M:%S"),
+         " - Error, invalid \"output_path\" argument.")
+  }
   # 3 - Global process ----
   simulations_directory <- list.dirs(path = directory_path,
                                      full.names = FALSE,
@@ -51,6 +61,21 @@ outputs_simulations_settings <- function(directory_path) {
                                                                       "scenarios_names_referential.txt",
                                                                       package = "isisinsight"),
                                                    show_col_types = FALSE)
+  param_gestion_isis <- readRDS(file = system.file("extdata",
+                                                   "param_gestion_isis.rds",
+                                                   package = "isisinsight")) %>%
+    dplyr::rename(population = pop,
+                  f_msy = Fmsy,
+                  b_trigger = Btrigger,
+                  fact_b_msy = factBmsy,
+                  fact_f_msy = factFmsy,
+                  f_msy_isis = Fmsy_ISIS,
+                  b_trigger_isis = Btrigger_ISIS,
+                  b_msy_isis = Bmsy_isis,
+                  f_msy_isis_bis = Fmsy_isis) %>%
+    dplyr::mutate(population = dplyr::case_when(
+      population == "Lophius_piscatorius" ~ "Lophius",
+      .default = population))
   for (simulation_directory_id in seq_len(length.out = length(x = simulations_directory))) {
     simulation_directory_name <- simulations_directory[simulation_directory_id]
     message(format(x = Sys.time(),
@@ -316,6 +341,51 @@ outputs_simulations_settings <- function(directory_path) {
                    "%Y-%m-%d %H:%M:%S"),
             " - Successful data import from simulation directory ",
             simulation_directory_name)
+  }
+  if ("BiomasseBeginMonthFeconde" %in% names(x = simulation_final$simulations_data_improved_merged)) {
+    if ("simulation_biomass_fertile" %in% names(x = simulation_final$simulations_data_improved_merged$BiomasseBeginMonthFeconde)) {
+      simulation_biomass_fertile_final <- list(dplyr::left_join(x = simulation_final$simulations_data_improved_merged$BiomasseBeginMonthFeconde$simulation_biomass_fertile,
+                                                                y = dplyr::select(.data = param_gestion_isis,
+                                                                                  population,
+                                                                                  b_trigger_isis),
+                                                                by = "population"))
+      names(simulation_biomass_fertile_final) = "simulation_biomass_fertile_final"
+      simulation_final$simulations_data_improved_merged$BiomasseBeginMonthFeconde <- c(simulation_final$simulations_data_improved_merged$BiomasseBeginMonthFeconde,
+                                                                                       simulation_biomass_fertile_final)
+    }
+  }
+  if ("MortalitePecheGroupe" %in% names(x = simulation_final$simulations_data_improved_merged)) {
+    if ("simulation_fishing_mortality_group" %in% names(x = simulation_final$simulations_data_improved_merged$MortalitePecheGroupe)) {
+      simulation_fishing_mortality_group_final <- list(dplyr::left_join(x = simulation_final$simulations_data_improved_merged$MortalitePecheGroupe$simulation_fishing_mortality_group,
+                                                                        y = dplyr::select(.data = param_gestion_isis,
+                                                                                          population,
+                                                                                          f_msy_isis),
+                                                                        by = "population"))
+      names(simulation_fishing_mortality_group_final) = "simulation_fishing_mortality_group_final"
+      simulation_final$simulations_data_improved_merged$MortalitePecheGroupe <- c(simulation_final$simulations_data_improved_merged$MortalitePecheGroupe,
+                                                                                  simulation_fishing_mortality_group_final)
+    }
+  }
+  if ("MortalitePecheTotale" %in% names(x = simulation_final$simulations_data_improved_merged)) {
+    if ("simulation_fishing_mortality_total" %in% names(x = simulation_final$simulations_data_improved_merged$MortalitePecheTotale)) {
+      simulation_fishing_mortality_total_final <- list(dplyr::left_join(x = simulation_final$simulations_data_improved_merged$MortalitePecheTotale$simulation_fishing_mortality_total,
+                                                                        y = dplyr::select(.data = param_gestion_isis,
+                                                                                          population,
+                                                                                          f_msy_isis),
+                                                                        by = "population"))
+      names(simulation_fishing_mortality_total_final) = "simulation_fishing_mortality_total_final"
+      simulation_final$simulations_data_improved_merged$MortalitePecheTotale <- c(simulation_final$simulations_data_improved_merged$MortalitePecheTotale,
+                                                                                  simulation_fishing_mortality_total_final)
+    }
+  }
+  if (! is.null(x = output_path)
+      && length(x = simulation_final$simulations_data_improved_merged) != 0) {
+    final_output_path <- file.path(output_path,
+                                   paste0(format(x = Sys.time(),
+                                                 "%Y%m%d_%H%M%S"),
+                                          "_isisfish_simulations_data_improved"))
+    dir.create(path = final_output_path)
+    browser()
   }
   return(simulation_final)
 }
