@@ -5,7 +5,7 @@ Function for ISIS-Fish outputs simulations formatting and manipulation.
 ## Usage
 
 ``` r
-outputs_simulations_settings(directory_path)
+outputs_simulations_settings(directory_path, output_path = NULL)
 ```
 
 ## Arguments
@@ -14,6 +14,12 @@ outputs_simulations_settings(directory_path)
 
   Mandatory. Class character expected. Directory path of the ISIS-Fish
   outputs simulations.
+
+- output_path:
+
+  Optional. Default NULL. Output path for saved data from function
+  element "simulations_data_improved_merged". If the value is NULL,
+  nothing will be exported.
 
 ## Value
 
@@ -28,5 +34,5 @@ simulation.
 #replace the value of directory_path by a correct path
 try(outputs_simulations_settings(directory_path = "my/path/to/simulations/directory"))
 #> Error in outputs_simulations_settings(directory_path = "my/path/to/simulations/directory") : 
-#>   2026-03-04 10:53:19 - Error, no input simulation available in the directory path.
+#>   2026-03-06 15:41:22 - Error, no input simulation available in the directory path.
 ```
