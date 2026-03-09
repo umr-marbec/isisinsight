@@ -385,7 +385,14 @@ outputs_simulations_settings <- function(directory_path,
                                                  "%Y%m%d_%H%M%S"),
                                           "_isisfish_simulations_data_improved"))
     dir.create(path = final_output_path)
-    browser()
+    for (current_simulations_data_improved_merged_id in seq_len(length.out = length(x = simulation_final$simulations_data_improved_merged))) {
+      for (current_simulations_data_improved_merged_sub_id in seq_len(length.out = length(x = simulation_final$simulations_data_improved_merged[[current_simulations_data_improved_merged_id]]))) {
+        saveRDS(object = simulation_final$simulations_data_improved_merged[[current_simulations_data_improved_merged_id]][[current_simulations_data_improved_merged_sub_id]],
+                file = file.path(final_output_path,
+                                 paste0(names(x = simulation_final$simulations_data_improved_merged[[current_simulations_data_improved_merged_id]][current_simulations_data_improved_merged_sub_id]),
+                                        ".rds")))
+      }
+    }
   }
   return(simulation_final)
 }
