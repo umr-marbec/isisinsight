@@ -349,7 +349,7 @@ outputs_simulations_settings <- function(directory_path,
                                                                                   population,
                                                                                   b_trigger_isis),
                                                                 by = "population"))
-      names(simulation_biomass_fertile_final) = "simulation_biomass_fertile_final"
+      names(simulation_biomass_fertile_final) <- "simulation_biomass_fertile_final"
       simulation_final$simulations_data_improved_merged$BiomasseBeginMonthFeconde <- c(simulation_final$simulations_data_improved_merged$BiomasseBeginMonthFeconde,
                                                                                        simulation_biomass_fertile_final)
     }
@@ -361,7 +361,7 @@ outputs_simulations_settings <- function(directory_path,
                                                                                           population,
                                                                                           f_msy_isis),
                                                                         by = "population"))
-      names(simulation_fishing_mortality_group_final) = "simulation_fishing_mortality_group_final"
+      names(simulation_fishing_mortality_group_final) <- "simulation_fishing_mortality_group_final"
       simulation_final$simulations_data_improved_merged$MortalitePecheGroupe <- c(simulation_final$simulations_data_improved_merged$MortalitePecheGroupe,
                                                                                   simulation_fishing_mortality_group_final)
     }
@@ -373,9 +373,68 @@ outputs_simulations_settings <- function(directory_path,
                                                                                           population,
                                                                                           f_msy_isis),
                                                                         by = "population"))
-      names(simulation_fishing_mortality_total_final) = "simulation_fishing_mortality_total_final"
+      names(simulation_fishing_mortality_total_final) <- "simulation_fishing_mortality_total_final"
       simulation_final$simulations_data_improved_merged$MortalitePecheTotale <- c(simulation_final$simulations_data_improved_merged$MortalitePecheTotale,
                                                                                   simulation_fishing_mortality_total_final)
+    }
+  }
+  if ("EffortsNominalMetier" %in% names(x = simulation_final$simulations_data_improved_merged)) {
+    if ("simulation_effort_nominal_metier_start_year_month" %in% names(x = simulation_final$simulations_data_improved_merged$EffortsNominalMetier)) {
+      simulation_effort_nominal_metier_start_year_month_total <- dplyr::group_by(.data = simulation_final$simulations_data_improved_merged$EffortsNominalMetier$simulation_effort_nominal_metier_start_year_month,
+                                                                                 metier,
+                                                                                 step,
+                                                                                 scenario_name) %>%
+        dplyr::mutate(effort_metier_month = sum(value)) %>%
+        dplyr::ungroup() %>%
+        dplyr::select(metier,
+                      step,
+                      effort_metier_month,
+                      scenario_name) %>%
+        dplyr::distinct()
+      simulation_effort_nominal_metier_start_year_month_total_bau <- dplyr::filter(.data = simulation_effort_nominal_metier_start_year_month_total,
+                                                                                   scenario_name == "BAU") %>%
+        dplyr::rename(effort_metier_month_bau = effort_metier_month) %>%
+        dplyr::select(-scenario_name)
+      simulation_effort_nominal_metier_start_year_month_total_bau <- dplyr::filter(.data = simulation_effort_nominal_metier_start_year_month_total,
+                                                                                   scenario_name == "BAU")
+      area_metier <- readRDS(file = system.file("extdata",
+                                                "data_intersections.rds",
+                                                package = "isisinsight")) %>%
+        dplyr::rename(name_area_metier = nom_zone_metier,
+                      name_area_management = nom_zone_gestion,
+                      number_cell_management = nb_cel_gestion,
+                      number_cell_metier = nb_cel_metier,
+                      number_cell_intersection = nb_cel_intersect) %>%
+        dplyr::mutate(area_management = stringr::str_extract(string = name_area_management ,
+                                                             pattern = ".+(?=\\.shp$)"),
+                      metier = stringr::str_extract(string = name_area_metier ,
+                                                    pattern = ".+(?=\\.shp$)"),
+                      number_cell_management = as.numeric(x = number_cell_management),
+                      number_cell_metier = as.numeric(x = number_cell_metier),
+                      number_cell_intersection = as.numeric(x = number_cell_intersection)) %>%
+        dplyr::select(-c(name_area_metier,
+                         name_area_management)) %>%
+        dplyr::filter(area_management != "zbsi_penatules")
+      strange_metier <- dplyr::select(.data = simulation_effort_nominal_metier_start_year_month_total_bau,
+                                      metier) %>%
+        dplyr::distinct() %>%
+        dplyr::filter(stringr::str_detect(string = metier,
+                                          pattern = "27.8")) %>%
+        dplyr::mutate(area = stringr::str_extract(string = metier,
+                                                  pattern = "(?<=27\\.).+"))
+      area_metier_8ab <- dplyr::filter(.data = area_metier,
+                                       metier %in% c("8.a",
+                                                     "8.b")) %>%
+        dplyr::rename(area = metier) %>%
+        dplyr::right_join(strange_metier,
+                          by = "area") %>%
+        dplyr::select(-area)
+      area_metier <- dplyr::filter(.data = area_metier,
+                                   metier %in% c("8.a",
+                                                 "8.b")) %>%
+        dplyr::bind_rows(area_metier_8ab)
+
+      browser()
     }
   }
   if (! is.null(x = output_path)
@@ -393,6 +452,11 @@ outputs_simulations_settings <- function(directory_path,
                                         ".rds")))
       }
     }
+    message(format(x = Sys.time(),
+                   "%Y-%m-%d %H:%M:%S"),
+            " - Successful data export in the output directory \"",
+            final_output_path,
+            "\"")
   }
   return(simulation_final)
 }
