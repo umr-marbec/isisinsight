@@ -61,21 +61,12 @@ outputs_simulations_settings <- function(directory_path,
                                                                       "scenarios_names_referential.txt",
                                                                       package = "isisinsight"),
                                                    show_col_types = FALSE)
-  param_gestion_isis <- readRDS(file = system.file("extdata",
-                                                   "param_gestion_isis.rds",
-                                                   package = "isisinsight")) %>%
-    dplyr::rename(population = pop,
-                  f_msy = Fmsy,
-                  b_trigger = Btrigger,
-                  fact_b_msy = factBmsy,
-                  fact_f_msy = factFmsy,
-                  f_msy_isis = Fmsy_ISIS,
-                  b_trigger_isis = Btrigger_ISIS,
-                  b_msy_isis = Bmsy_isis,
-                  f_msy_isis_bis = Fmsy_isis) %>%
-    dplyr::mutate(population = dplyr::case_when(
-      population == "Lophius_piscatorius" ~ "Lophius",
-      .default = population))
+  param_gestion_isis <- readr::read_delim(file = system.file("extdata",
+                                                             "param_gestion_isis.txt",
+                                                             package = "isisinsight"),
+                                          delim = ";",
+                                          col_types = "cdddddddd",
+                                          col_names = TRUE)
   for (simulation_directory_id in seq_len(length.out = length(x = simulations_directory))) {
     simulation_directory_name <- simulations_directory[simulation_directory_id]
     message(format(x = Sys.time(),
@@ -391,31 +382,20 @@ outputs_simulations_settings <- function(directory_path,
                       effort_metier_month,
                       scenario_name) %>%
         dplyr::distinct()
-      simulation_effort_nominal_metier_start_year_month_total_bau <- dplyr::filter(.data = simulation_effort_nominal_metier_start_year_month_total,
-                                                                                   scenario_name == "BAU") %>%
+      simulation_effort_nominal_metier_start_year_month_bau <- dplyr::filter(.data = simulation_effort_nominal_metier_start_year_month_total,
+                                                                             scenario_name == "BAU") %>%
         dplyr::rename(effort_metier_month_bau = effort_metier_month) %>%
         dplyr::select(-scenario_name)
-      simulation_effort_nominal_metier_start_year_month_total_bau <- dplyr::filter(.data = simulation_effort_nominal_metier_start_year_month_total,
-                                                                                   scenario_name == "BAU")
-      area_metier <- readRDS(file = system.file("extdata",
-                                                "data_intersections.rds",
-                                                package = "isisinsight")) %>%
-        dplyr::rename(name_area_metier = nom_zone_metier,
-                      name_area_management = nom_zone_gestion,
-                      number_cell_management = nb_cel_gestion,
-                      number_cell_metier = nb_cel_metier,
-                      number_cell_intersection = nb_cel_intersect) %>%
-        dplyr::mutate(area_management = stringr::str_extract(string = name_area_management ,
-                                                             pattern = ".+(?=\\.shp$)"),
-                      metier = stringr::str_extract(string = name_area_metier ,
-                                                    pattern = ".+(?=\\.shp$)"),
-                      number_cell_management = as.numeric(x = number_cell_management),
-                      number_cell_metier = as.numeric(x = number_cell_metier),
-                      number_cell_intersection = as.numeric(x = number_cell_intersection)) %>%
-        dplyr::select(-c(name_area_metier,
-                         name_area_management)) %>%
+      simulation_effort_nominal_metier_start_year_month <- dplyr::filter(.data = simulation_effort_nominal_metier_start_year_month_total,
+                                                                         scenario_name != "BAU")
+      area_metier <- readr::read_delim(file = system.file("extdata",
+                                                          "data_intersections.txt",
+                                                          package = "isisinsight"),
+                                       delim = ";",
+                                       col_types = "cciii",
+                                       col_names = TRUE) %>%
         dplyr::filter(area_management != "zbsi_penatules")
-      strange_metier <- dplyr::select(.data = simulation_effort_nominal_metier_start_year_month_total_bau,
+      strange_metier <- dplyr::select(.data = simulation_effort_nominal_metier_start_year_month_bau,
                                       metier) %>%
         dplyr::distinct() %>%
         dplyr::filter(stringr::str_detect(string = metier,
@@ -433,8 +413,36 @@ outputs_simulations_settings <- function(directory_path,
                                    metier %in% c("8.a",
                                                  "8.b")) %>%
         dplyr::bind_rows(area_metier_8ab)
-
+      area_month_openning_referential <- readr::read_delim(file = system.file("extdata",
+                                                                              "area_month_openning_referential.txt",
+                                                                              package = "isisinsight"),
+                                                           col_types = "icic")
+      area_month_openning <- dplyr::left_join(x = area_month_openning_referential,
+                                              y = scenarios_names_referential,
+                                              by = "simulation_name") %>%
+        dplyr::select(-simulation_name)
       browser()
+      metier_referential <- readLines(con = system.file("extdata",
+                                                        "metier_referential.txt",
+                                                        package = "isisinsight"))
+      effort_management_diagnostic <- dplyr::left_join(x = simulation_effort_nominal_metier_start_year_month,
+                                                       y = simulation_effort_nominal_metier_start_year_month_bau,
+                                                       by = c("metier",
+                                                              "step")) %>%
+        dplyr::left_join(area_month_openning,
+                         by = c("step",
+                                "scenario_name")) %>%
+        dplyr::left_join(area_metier,
+                         by = c("metier",
+                                "area_management")) %>%
+        dplyr::rename(openning_metier = openning) %>%
+        dplyr::mutate(openning_metier = dplyr::case_when(
+          scenario_name == "O-D-3_miles"
+          & (! metier %in% !!metier_referential)
+          & stringr::str_detect(metier,
+                                "0-10") ~ 1,
+          .default = openning_metier
+        ))
     }
   }
   if (! is.null(x = output_path)

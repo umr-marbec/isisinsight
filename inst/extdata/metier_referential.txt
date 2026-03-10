@@ -1,0 +1,22 @@
+D_metier_OTH_Zunique @ Flottilles agrégées-0-10
+D_2_Zunique @ Flottilles agrégées-0-10
+D_metier_OTH_Zunique @ Fileyeurs Caseyeurs exclusifs-0-10
+D_metier_OTH_Zunique @ Palangriers exclusifs-0-10
+D_2_Zunique @ Palangriers exclusifs-0-10
+D_low_activity_1_Zunique @ Flottilles agrégées-0-10
+D_2_Zunique @ Fileyeurs Caseyeurs exclusifs-0-10
+D_metier_OTH_Zunique @ Fileyeurs exclusifs-0-10
+O_metier_OTH_Zunique @ Flottilles agrégées-0-10
+O_5_Zunique @ Flottilles agrégées-0-10
+O_2_Zunique @ Flottilles agrégées-0-10
+O_4_Zunique @ Flottilles agrégées-0-10
+O_3_Zunique @ Flottilles agrégées-0-10
+O_low_activity_2_Zunique @ Flottilles agrégées-0-10
+O_metier_OTH_Zunique @ Palangriers exclusifs-0-10
+O_2_Zunique @ Fileyeurs exclusifs-0-10
+O_metier_OTH_Zunique @ Fileyeurs exclusifs-0-10
+O_1_Zunique @ Flottilles agrégées-0-10
+O_low_activity_2_Zunique @ Palangriers exclusifs-0-10
+O_metier_OTH_Zunique @ Fileyeurs Caseyeurs exclusifs-0-10
+O_2_Zunique @ Palangriers exclusifs-0-10
+O_4_Zunique @ Palangriers exclusifs-0-10
