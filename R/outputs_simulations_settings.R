@@ -26,6 +26,34 @@ outputs_simulations_settings <- function(directory_path,
   fish_group <- NULL
   group <- NULL
   fishing_mortality <- NULL
+  abundance <- NULL
+  abundance_total <- NULL
+  abundance_total_suppress_median <- NULL
+  age <- NULL
+  area <- NULL
+  area_management <- NULL
+  b_trigger_isis <- NULL
+  effort_bau <- NULL
+  effort_management <- NULL
+  effort_manangement_area <- NULL
+  effort_metier_month <- NULL
+  effort_metier_month_bau <- NULL
+  effort_metier_month_management <- NULL
+  effort_metier_month_management_area <- NULL
+  effort_reduction_management_area <- NULL
+  f_msy_isis <- NULL
+  l_inf <- NULL
+  l_mat <- NULL
+  lc <- NULL
+  length_mean <- NULL
+  lopt10 <- NULL
+  median <- NULL
+  median_abundance_length <- NULL
+  metier <- NULL
+  number_cell_intersection <- NULL
+  number_cell_metier <- NULL
+  openning <- NULL
+  openning_metier <- NULL
   # Empty for now
   # 2 - Global argument check ----
   if (missing(x = directory_path)
@@ -61,12 +89,12 @@ outputs_simulations_settings <- function(directory_path,
                                                                       "scenarios_names_referential.txt",
                                                                       package = "isisinsight"),
                                                    show_col_types = FALSE)
-  param_gestion_isis <- readr::read_delim(file = system.file("extdata",
-                                                             "param_gestion_isis.txt",
-                                                             package = "isisinsight"),
-                                          delim = ";",
-                                          col_types = "cdddddddd",
-                                          col_names = TRUE)
+  parameters_gestion_isis <- readr::read_delim(file = system.file("extdata",
+                                                                  "parameters_gestion_isis.txt",
+                                                                  package = "isisinsight"),
+                                               delim = ";",
+                                               col_types = "cdddddddd",
+                                               col_names = TRUE)
   for (simulation_directory_id in seq_len(length.out = length(x = simulations_directory))) {
     simulation_directory_name <- simulations_directory[simulation_directory_id]
     message(format(x = Sys.time(),
@@ -127,30 +155,31 @@ outputs_simulations_settings <- function(directory_path,
                                                 list(NULL))
           names(current_simulation_data_improved)[length(x = current_simulation_data_improved)] <- names(x = current_csv_data)
           if (current_directory_path_files_csv[current_directory_path_files_csv_id] == "BiomasseBeginMonthFeconde.csv") {
-            simulation_biomass_fertile <- list(dplyr::filter(.data = current_csv_data[[1]],
-                                                             step %% 12 == 0
-                                                             & ! (zone_population %in% c("Zone_CelticSea",
-                                                                                         "Zone_NorthernArea"))) %>%
-                                                 dplyr::mutate(year = step / 12 + as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
-                                                                                                                      pattern = "^[[:digit:]]+")),
-                                                               population = dplyr::case_when(
-                                                                 population == "Lophius_piscatorius" ~ "Lophius",
-                                                                 .default = population
-                                                               )) %>%
-                                                 dplyr::summarise(biomass = sum(value),
-                                                                  .by = c(year,
-                                                                          population)) %>%
-                                                 dplyr::mutate(scenario_name = !!current_simulation_metadata$scenario_name))
-            names(simulation_biomass_fertile) <- "simulation_biomass_fertile"
+            simulation_biomass_spawning <- list(dplyr::filter(.data = current_csv_data[[1]],
+                                                              step %% 12 == 0
+                                                              & ! (zone_population %in% c("Zone_CelticSea",
+                                                                                          "Zone_NorthernArea"))) %>%
+                                                  dplyr::mutate(year = step / 12 + as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
+                                                                                                                       pattern = "^[[:digit:]]+")),
+                                                                population = dplyr::case_when(
+                                                                  population == "Lophius_piscatorius" ~ "Lophius",
+                                                                  .default = population
+                                                                )) %>%
+                                                  dplyr::summarise(biomass = sum(value),
+                                                                   .by = c(year,
+                                                                           population)) %>%
+                                                  dplyr::mutate(scenario_name = !!current_simulation_metadata$scenario_name))
+            names(simulation_biomass_spawning) <- "simulation_biomass_spawning"
             current_simulation_data_improved$BiomasseBeginMonthFeconde <- c(current_simulation_data_improved$BiomasseBeginMonthFeconde,
-                                                                            simulation_biomass_fertile)
+                                                                            simulation_biomass_spawning)
           }
           if (current_directory_path_files_csv[current_directory_path_files_csv_id] == "AbondanceBeginMonth_Gpe_Janvier.csv") {
             simulation_abundance_gpe_january <-  list(dplyr::mutate(.data = current_csv_data[[1]],
                                                                     population = dplyr::case_when(
                                                                       population == "Lophius_piscatorius" ~ "Lophius",
                                                                       .default = population),
-                                                                    scenario_name = !!current_simulation_metadata$scenario_name))
+                                                                    scenario_name = !!current_simulation_metadata$scenario_name) %>%
+                                                        dplyr::rename(abundance = value))
             names(simulation_abundance_gpe_january) <- "simulation_abundance_gpe_january"
             simulation_abundance_january <- list(dplyr::summarise(.data = current_csv_data[[1]],
                                                                   abundance = sum(value),
@@ -333,40 +362,73 @@ outputs_simulations_settings <- function(directory_path,
             " - Successful data import from simulation directory ",
             simulation_directory_name)
   }
+  if ("AbondanceBeginMonth_Gpe_Janvier" %in% names(x = simulation_final$simulations_data_improved_merged)) {
+    if ("simulation_abundance_gpe_january" %in% names(x = simulation_final$simulations_data_improved_merged$AbondanceBeginMonth_Gpe_Janvier)) {
+      parameters_biological <- readr::read_delim(file = system.file("extdata",
+                                                                    "parameters_biological.txt",
+                                                                    package = "isisinsight"),
+                                                 delim = ";",
+                                                 col_types = "ciiddddd",
+                                                 col_names = TRUE)
+      abundance_length <- dplyr::select(.data = parameters_biological,
+                                        -age) %>%
+        dplyr::left_join(simulation_final$simulations_data_improved_merged$AbondanceBeginMonth_Gpe_Janvier$simulation_abundance_gpe_january,
+                         by = c("population",
+                                "group")) %>%
+        dplyr::group_by(population,
+                        scenario_name,
+                        year,
+                        length) %>%
+        dplyr::mutate(abundance_length = sum(abundance)) %>%
+        dplyr::ungroup() %>%
+        dplyr::distinct() %>%
+        dplyr::select(-abundance)
+      length_mean_lc_lfm <- dplyr::group_by(.data = abundance_length,
+                                            population,
+                                            scenario_name,
+                                            year) %>%
+        dplyr::mutate(median_abundance_length = median(abundance_length)) %>%
+        dplyr::filter(abundance_length > median_abundance_length) %>%
+        dplyr::mutate(abundance_total_suppress_median = sum(abundance_length)) %>%
+        dplyr::reframe(length_mean = sum(abundance_length * length) / abundance_total_suppress_median,
+                       lc = min(length),
+                       lfm = 0.75 * lc + 0.25 * l_inf,
+                       l_inf = l_inf,
+                       l_mat = l_mat,
+                       l_opt = (2 / 3) * l_inf) %>%
+        dplyr::distinct()
+      proportion_mega <- dplyr::mutate(.data = abundance_length,
+                                       lopt10 = (2 / 3) * l_inf * 1.1) %>%
+        dplyr::group_by(population,
+                        scenario_name,
+                        year) %>%
+        dplyr::mutate(abundance_total = sum(abundance_length)) %>%
+        dplyr::filter(length > lopt10) %>%
+        dplyr::reframe(proportion_mega = sum(abundance_length) / abundance_total) %>%
+        dplyr::distinct()
+      length_mean_lc_lfm_proportion_mega <- list(dplyr::left_join(x = length_mean_lc_lfm,
+                                                                  y = proportion_mega,
+                                                                  by = c("population",
+                                                                         "scenario_name",
+                                                                         "year")) %>%
+                                                   tidyr::pivot_longer(cols = length_mean:proportion_mega,
+                                                                       names_to = "indicateur",
+                                                                       values_to = "value"))
+      names(length_mean_lc_lfm_proportion_mega) = "length_mean_lc_lfm_proportion_mega"
+      simulation_final$simulations_data_improved_merged$AbondanceBeginMonth_Gpe_Janvier <- c(simulation_final$simulations_data_improved_merged$AbondanceBeginMonth_Gpe_Janvier,
+                                                                                             length_mean_lc_lfm_proportion_mega)
+    }
+  }
   if ("BiomasseBeginMonthFeconde" %in% names(x = simulation_final$simulations_data_improved_merged)) {
-    if ("simulation_biomass_fertile" %in% names(x = simulation_final$simulations_data_improved_merged$BiomasseBeginMonthFeconde)) {
-      simulation_biomass_fertile_final <- list(dplyr::left_join(x = simulation_final$simulations_data_improved_merged$BiomasseBeginMonthFeconde$simulation_biomass_fertile,
-                                                                y = dplyr::select(.data = param_gestion_isis,
-                                                                                  population,
-                                                                                  b_trigger_isis),
-                                                                by = "population"))
-      names(simulation_biomass_fertile_final) <- "simulation_biomass_fertile_final"
+    if ("simulation_biomass_spawning" %in% names(x = simulation_final$simulations_data_improved_merged$BiomasseBeginMonthFeconde)) {
+      simulation_biomass_spawning_final <- list(dplyr::left_join(x = simulation_final$simulations_data_improved_merged$BiomasseBeginMonthFeconde$simulation_biomass_spawning,
+                                                                 y = dplyr::select(.data = parameters_gestion_isis,
+                                                                                   population,
+                                                                                   b_trigger_isis),
+                                                                 by = "population"))
+      names(simulation_biomass_spawning_final) <- "simulation_biomass_spawning_final"
       simulation_final$simulations_data_improved_merged$BiomasseBeginMonthFeconde <- c(simulation_final$simulations_data_improved_merged$BiomasseBeginMonthFeconde,
-                                                                                       simulation_biomass_fertile_final)
-    }
-  }
-  if ("MortalitePecheGroupe" %in% names(x = simulation_final$simulations_data_improved_merged)) {
-    if ("simulation_fishing_mortality_group" %in% names(x = simulation_final$simulations_data_improved_merged$MortalitePecheGroupe)) {
-      simulation_fishing_mortality_group_final <- list(dplyr::left_join(x = simulation_final$simulations_data_improved_merged$MortalitePecheGroupe$simulation_fishing_mortality_group,
-                                                                        y = dplyr::select(.data = param_gestion_isis,
-                                                                                          population,
-                                                                                          f_msy_isis),
-                                                                        by = "population"))
-      names(simulation_fishing_mortality_group_final) <- "simulation_fishing_mortality_group_final"
-      simulation_final$simulations_data_improved_merged$MortalitePecheGroupe <- c(simulation_final$simulations_data_improved_merged$MortalitePecheGroupe,
-                                                                                  simulation_fishing_mortality_group_final)
-    }
-  }
-  if ("MortalitePecheTotale" %in% names(x = simulation_final$simulations_data_improved_merged)) {
-    if ("simulation_fishing_mortality_total" %in% names(x = simulation_final$simulations_data_improved_merged$MortalitePecheTotale)) {
-      simulation_fishing_mortality_total_final <- list(dplyr::left_join(x = simulation_final$simulations_data_improved_merged$MortalitePecheTotale$simulation_fishing_mortality_total,
-                                                                        y = dplyr::select(.data = param_gestion_isis,
-                                                                                          population,
-                                                                                          f_msy_isis),
-                                                                        by = "population"))
-      names(simulation_fishing_mortality_total_final) <- "simulation_fishing_mortality_total_final"
-      simulation_final$simulations_data_improved_merged$MortalitePecheTotale <- c(simulation_final$simulations_data_improved_merged$MortalitePecheTotale,
-                                                                                  simulation_fishing_mortality_total_final)
+                                                                                       simulation_biomass_spawning_final)
     }
   }
   if ("EffortsNominalMetier" %in% names(x = simulation_final$simulations_data_improved_merged)) {
@@ -421,28 +483,86 @@ outputs_simulations_settings <- function(directory_path,
                                               y = scenarios_names_referential,
                                               by = "simulation_name") %>%
         dplyr::select(-simulation_name)
-      browser()
       metier_referential <- readLines(con = system.file("extdata",
                                                         "metier_referential.txt",
                                                         package = "isisinsight"))
-      effort_management_diagnostic <- dplyr::left_join(x = simulation_effort_nominal_metier_start_year_month,
-                                                       y = simulation_effort_nominal_metier_start_year_month_bau,
-                                                       by = c("metier",
-                                                              "step")) %>%
-        dplyr::left_join(area_month_openning,
-                         by = c("step",
-                                "scenario_name")) %>%
-        dplyr::left_join(area_metier,
-                         by = c("metier",
-                                "area_management")) %>%
-        dplyr::rename(openning_metier = openning) %>%
-        dplyr::mutate(openning_metier = dplyr::case_when(
-          scenario_name == "O-D-3_miles"
-          & (! metier %in% !!metier_referential)
-          & stringr::str_detect(metier,
-                                "0-10") ~ 1,
-          .default = openning_metier
-        ))
+      effort_management_diagnostic <- list(dplyr::left_join(x = simulation_effort_nominal_metier_start_year_month,
+                                                            y = simulation_effort_nominal_metier_start_year_month_bau,
+                                                            by = c("metier",
+                                                                   "step")) %>%
+                                             dplyr::left_join(area_month_openning,
+                                                              by = c("step",
+                                                                     "scenario_name")) %>%
+                                             dplyr::left_join(area_metier,
+                                                              by = c("metier",
+                                                                     "area_management")) %>%
+                                             dplyr::rename(openning_metier = openning) %>%
+                                             dplyr::mutate(openning_metier = dplyr::case_when(
+                                               area_management == "Zone_Coraux" ~ 0,
+                                               (scenario_name == "O-D-3_miles"
+                                                & (! metier %in% !!metier_referential)
+                                                & stringr::str_detect(metier,
+                                                                      "0-10"))
+                                               | (scenario_name == "O-G-Frayere"
+                                                  & (! stringr::str_detect(metier,
+                                                                           "G"))
+                                                  & (! stringr::str_detect(metier,
+                                                                           "O")))
+                                               | (scenario_name %in% c("G-Trim1",
+                                                                       "G-Fevr",
+                                                                       "G-1/3-Trim1")
+                                                  & (! stringr::str_detect(metier,
+                                                                           "G"))) ~ 1,
+                                               .default = openning_metier),
+                                               effort_metier_month_management = dplyr::case_when(
+                                                 number_cell_metier == 0 ~ 0,
+                                                 .default = (effort_metier_month * number_cell_intersection / number_cell_metier)
+                                               ),
+                                               effort_metier_month_management_area = effort_metier_month_management * openning_metier) %>%
+                                             dplyr::group_by(area_management,
+                                                             scenario_name) %>%
+                                             dplyr::summarise(effort_management = sum(effort_metier_month_management,
+                                                                                      na.rm = TRUE),
+                                                              effort_manangement_area = sum(effort_metier_month_management_area,
+                                                                                            na.rm = TRUE),
+                                                              effort_bau = sum(effort_metier_month_bau,
+                                                                               na.rm = TRUE)) %>%
+                                             dplyr::mutate(effort_reduction_management_area = dplyr::case_when(
+                                               effort_bau == 0 ~ 0,
+                                               .default = ((effort_bau - effort_manangement_area) / effort_bau) * 100
+                                             )) %>%
+                                             dplyr::select(scenario_name,
+                                                           area_management,
+                                                           effort_management,
+                                                           effort_manangement_area,
+                                                           effort_reduction_management_area))
+      names(effort_management_diagnostic) <- "effort_management_diagnostic"
+      simulation_final$simulations_data_improved_merged$EffortsNominalMetier <- c(simulation_final$simulations_data_improved_merged$EffortsNominalMetier,
+                                                                                  effort_management_diagnostic)
+    }
+  }
+  if ("MortalitePecheGroupe" %in% names(x = simulation_final$simulations_data_improved_merged)) {
+    if ("simulation_fishing_mortality_group" %in% names(x = simulation_final$simulations_data_improved_merged$MortalitePecheGroupe)) {
+      simulation_fishing_mortality_group_final <- list(dplyr::left_join(x = simulation_final$simulations_data_improved_merged$MortalitePecheGroupe$simulation_fishing_mortality_group,
+                                                                        y = dplyr::select(.data = parameters_gestion_isis,
+                                                                                          population,
+                                                                                          f_msy_isis),
+                                                                        by = "population"))
+      names(simulation_fishing_mortality_group_final) <- "simulation_fishing_mortality_group_final"
+      simulation_final$simulations_data_improved_merged$MortalitePecheGroupe <- c(simulation_final$simulations_data_improved_merged$MortalitePecheGroupe,
+                                                                                  simulation_fishing_mortality_group_final)
+    }
+  }
+  if ("MortalitePecheTotale" %in% names(x = simulation_final$simulations_data_improved_merged)) {
+    if ("simulation_fishing_mortality_total" %in% names(x = simulation_final$simulations_data_improved_merged$MortalitePecheTotale)) {
+      simulation_fishing_mortality_total_final <- list(dplyr::left_join(x = simulation_final$simulations_data_improved_merged$MortalitePecheTotale$simulation_fishing_mortality_total,
+                                                                        y = dplyr::select(.data = parameters_gestion_isis,
+                                                                                          population,
+                                                                                          f_msy_isis),
+                                                                        by = "population"))
+      names(simulation_fishing_mortality_total_final) <- "simulation_fishing_mortality_total_final"
+      simulation_final$simulations_data_improved_merged$MortalitePecheTotale <- c(simulation_final$simulations_data_improved_merged$MortalitePecheTotale,
+                                                                                  simulation_fishing_mortality_total_final)
     }
   }
   if (! is.null(x = output_path)
