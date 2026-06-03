@@ -3,6 +3,7 @@
 #' Function for ISIS-Fish outputs simulations formatting and manipulation.
 #' @param directory_path Mandatory. Class character expected. Directory path of the ISIS-Fish outputs simulations.
 #' @param output_path Optional. Default NULL. Output path for saved data from function element "simulations_data_improved_merged". If the value is NULL, nothing will be exported.
+#' @param output_format Optional. Default "rds". Output(s) format expected. You wan choose between .rds or .csv (with ";" for the delimiter).
 #' @return The function returns a list with a length in relation to the number of simulation directory provided. Each element of the list has information about metadata and data (original and improved) associated with the simulation.
 #' @export
 #' @examples
@@ -10,7 +11,8 @@
 #' try(outputs_simulations_settings(directory_path = "my/path/to/simulations/directory"))
 #'
 outputs_simulations_settings <- function(directory_path,
-                                         output_path = NULL) {
+                                         output_path = NULL,
+                                         output_format = "rds") {
   # 1 - Global variable assignment ----
   population <- NULL
   scenario_name <- NULL
@@ -54,23 +56,28 @@ outputs_simulations_settings <- function(directory_path,
   number_cell_metier <- NULL
   openning <- NULL
   openning_metier <- NULL
-  # Empty for now
   # 2 - Global argument check ----
-  if (missing(x = directory_path)
-      || ! inherits(x = directory_path,
-                    what = "character")
-      || length(x = directory_path) != 1) {
-    stop(format(x = Sys.time(),
-                "%Y-%m-%d %H:%M:%S"),
-         " - Error, invalid \"directory_path\" argument.")
+  ## 2.1 - directory_path ----
+  if (rlang::is_missing(directory_path)) {
+    stop("The `directory_path` argument is required.")
   }
-  if (! is.null(x = output_path)
-      && (! inherits(x = output_path,
-                     what = "character")
-          || length(x = output_path) != 1)) {
-    stop(format(x = Sys.time(),
-                "%Y-%m-%d %H:%M:%S"),
-         " - Error, invalid \"output_path\" argument.")
+  checkmate::assert_character(x = directory_path,
+                              len = 1)
+  ## 2.2 - output_path ----
+  if (rlang::is_missing(output_path)) {
+    stop("The `output_path` argument is required.")
+  }
+  checkmate::assert_character(x = output_path,
+                              len = 1,
+                              null.ok = TRUE)
+  ## 2.3 - output_format ----
+  if (! is.null(x = output_path)) {
+    if (rlang::is_missing(output_format)) {
+      stop("The `output_format` argument is required.")
+    }
+    checkmate::assert_choice(x = output_format,
+                             choices = c("rds",
+                                         "csv"))
   }
   # 3 - Global process ----
   simulations_directory <- list.dirs(path = directory_path,
@@ -568,6 +575,7 @@ outputs_simulations_settings <- function(directory_path,
                                                                                   simulation_fishing_mortality_total_final)
     }
   }
+  ## 3.x - Output(s) export(s) ----
   if (! is.null(x = output_path)
       && length(x = simulation_final$simulations_data_improved_merged) != 0) {
     final_output_path <- file.path(output_path,
@@ -577,14 +585,17 @@ outputs_simulations_settings <- function(directory_path,
     dir.create(path = final_output_path)
     for (current_simulations_data_improved_merged_id in seq_len(length.out = length(x = simulation_final$simulations_data_improved_merged))) {
       for (current_simulations_data_improved_merged_sub_id in seq_len(length.out = length(x = simulation_final$simulations_data_improved_merged[[current_simulations_data_improved_merged_id]]))) {
-        saveRDS(object = simulation_final$simulations_data_improved_merged[[current_simulations_data_improved_merged_id]][[current_simulations_data_improved_merged_sub_id]],
-                file = file.path(final_output_path,
-                                 paste0(names(x = simulation_final$simulations_data_improved_merged[[current_simulations_data_improved_merged_id]][current_simulations_data_improved_merged_sub_id]),
-                                        ".rds")))
-        # readr::write_csv2(x = simulation_final$simulations_data_improved_merged[[current_simulations_data_improved_merged_id]][[current_simulations_data_improved_merged_sub_id]],
-        #                   file = file.path(final_output_path,
-        #                                    paste0(names(x = simulation_final$simulations_data_improved_merged[[current_simulations_data_improved_merged_id]][current_simulations_data_improved_merged_sub_id]),
-        #                                           ".csv")))
+        if (output_format == "rds") {
+          saveRDS(object = simulation_final$simulations_data_improved_merged[[current_simulations_data_improved_merged_id]][[current_simulations_data_improved_merged_sub_id]],
+                  file = file.path(final_output_path,
+                                   paste0(names(x = simulation_final$simulations_data_improved_merged[[current_simulations_data_improved_merged_id]][current_simulations_data_improved_merged_sub_id]),
+                                          ".rds")))
+        } else {
+          readr::write_csv2(x = simulation_final$simulations_data_improved_merged[[current_simulations_data_improved_merged_id]][[current_simulations_data_improved_merged_sub_id]],
+                            file = file.path(final_output_path,
+                                             paste0(names(x = simulation_final$simulations_data_improved_merged[[current_simulations_data_improved_merged_id]][current_simulations_data_improved_merged_sub_id]),
+                                                    ".csv")))
+        }
       }
     }
     message(format(x = Sys.time(),

@@ -4,12 +4,18 @@
 \alias{outputs_simulations_settings}
 \title{ISIS-Fish outputs simulations formatting}
 \usage{
-outputs_simulations_settings(directory_path, output_path = NULL)
+outputs_simulations_settings(
+  directory_path,
+  output_path = NULL,
+  output_format = "rds"
+)
 }
 \arguments{
 \item{directory_path}{Mandatory. Class character expected. Directory path of the ISIS-Fish outputs simulations.}
 
 \item{output_path}{Optional. Default NULL. Output path for saved data from function element "simulations_data_improved_merged". If the value is NULL, nothing will be exported.}
+
+\item{output_format}{Optional. Default "rds". Output(s) format expected. You wan choose between .rds or .csv (with ";" for the delimiter).}
 }
 \value{
 The function returns a list with a length in relation to the number of simulation directory provided. Each element of the list has information about metadata and data (original and improved) associated with the simulation.
