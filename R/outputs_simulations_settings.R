@@ -95,6 +95,9 @@ outputs_simulations_settings <- function(directory_path,
                                                delim = ";",
                                                col_types = "cdddddddd",
                                                col_names = TRUE)
+  parameters_gestion_isis_final <- parameters_gestion_isis %>%
+    dplyr::mutate(population = dplyr::replace_when(x = population,
+                                                   population == "Lophius_piscatorius" ~ "Lophius"))
   for (simulation_directory_id in seq_len(length.out = length(x = simulations_directory))) {
     simulation_directory_name <- simulations_directory[simulation_directory_id]
     message(format(x = Sys.time(),
@@ -422,7 +425,7 @@ outputs_simulations_settings <- function(directory_path,
   if ("BiomasseBeginMonthFeconde" %in% names(x = simulation_final$simulations_data_improved_merged)) {
     if ("simulation_biomass_spawning" %in% names(x = simulation_final$simulations_data_improved_merged$BiomasseBeginMonthFeconde)) {
       simulation_biomass_spawning_final <- list(dplyr::left_join(x = simulation_final$simulations_data_improved_merged$BiomasseBeginMonthFeconde$simulation_biomass_spawning,
-                                                                 y = dplyr::select(.data = parameters_gestion_isis,
+                                                                 y = dplyr::select(.data = parameters_gestion_isis_final,
                                                                                    population,
                                                                                    b_trigger_isis),
                                                                  by = "population"))
@@ -544,7 +547,7 @@ outputs_simulations_settings <- function(directory_path,
   if ("MortalitePecheGroupe" %in% names(x = simulation_final$simulations_data_improved_merged)) {
     if ("simulation_fishing_mortality_group" %in% names(x = simulation_final$simulations_data_improved_merged$MortalitePecheGroupe)) {
       simulation_fishing_mortality_group_final <- list(dplyr::left_join(x = simulation_final$simulations_data_improved_merged$MortalitePecheGroupe$simulation_fishing_mortality_group,
-                                                                        y = dplyr::select(.data = parameters_gestion_isis,
+                                                                        y = dplyr::select(.data = parameters_gestion_isis_final,
                                                                                           population,
                                                                                           f_msy_isis),
                                                                         by = "population"))
@@ -556,7 +559,7 @@ outputs_simulations_settings <- function(directory_path,
   if ("MortalitePecheTotale" %in% names(x = simulation_final$simulations_data_improved_merged)) {
     if ("simulation_fishing_mortality_total" %in% names(x = simulation_final$simulations_data_improved_merged$MortalitePecheTotale)) {
       simulation_fishing_mortality_total_final <- list(dplyr::left_join(x = simulation_final$simulations_data_improved_merged$MortalitePecheTotale$simulation_fishing_mortality_total,
-                                                                        y = dplyr::select(.data = parameters_gestion_isis,
+                                                                        y = dplyr::select(.data = parameters_gestion_isis_final,
                                                                                           population,
                                                                                           f_msy_isis),
                                                                         by = "population"))
@@ -578,6 +581,10 @@ outputs_simulations_settings <- function(directory_path,
                 file = file.path(final_output_path,
                                  paste0(names(x = simulation_final$simulations_data_improved_merged[[current_simulations_data_improved_merged_id]][current_simulations_data_improved_merged_sub_id]),
                                         ".rds")))
+        # readr::write_csv2(x = simulation_final$simulations_data_improved_merged[[current_simulations_data_improved_merged_id]][[current_simulations_data_improved_merged_sub_id]],
+        #                   file = file.path(final_output_path,
+        #                                    paste0(names(x = simulation_final$simulations_data_improved_merged[[current_simulations_data_improved_merged_id]][current_simulations_data_improved_merged_sub_id]),
+        #                                           ".csv")))
       }
     }
     message(format(x = Sys.time(),

@@ -24,6 +24,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Mathieu Depetris \email{mathieu.depetris@cnrs.fr} (\href{https://orcid.org/0000-0001-8080-0531}{ORCID})
   \item Stephanie Mahevas \email{stephanie.mahevas@ifremer.fr}
 }
 
