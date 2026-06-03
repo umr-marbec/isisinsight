@@ -23,6 +23,9 @@ Useful links:
 
 Authors:
 
+- Mathieu Depetris <mathieu.depetris@cnrs.fr>
+  ([ORCID](https://orcid.org/0000-0001-8080-0531))
+
 - Stephanie Mahevas <stephanie.mahevas@ifremer.fr>
 
 Other contributors:

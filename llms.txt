@@ -14,6 +14,7 @@ For an installation of the package from the last validated version like
 so:
 
 ``` r
+
 devtools::install_github("https://github.com/umr-marbec/isisinsight")
 ```
 
