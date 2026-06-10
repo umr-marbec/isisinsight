@@ -6,6 +6,7 @@
 #' @param output_format Optional. Default "rds". Output(s) format expected. You wan choose between .rds or .csv (with ";" for the delimiter).
 #' @return The function returns a list with a length in relation to the number of simulation directory provided. Each element of the list has information about metadata and data (original and improved) associated with the simulation.
 #' @export
+#' @importFrom rlang .data
 #' @examples
 #' #replace the value of directory_path by a correct path
 #' try(outputs_simulations_settings(directory_path = "my/path/to/simulations/directory"))
@@ -14,48 +15,48 @@ outputs_simulations_settings <- function(directory_path,
                                          output_path = NULL,
                                          output_format = "rds") {
   # 1 - Global variable assignment ----
-  population <- NULL
-  scenario_name <- NULL
-  step <- NULL
-  value <- NULL
-  year <- NULL
-  zone_population <- NULL
-  simulation_name <- NULL
-  step_quarter <- NULL
-  fleet <- NULL
-  catch <- NULL
-  catch_total <- NULL
-  fish_group <- NULL
-  group <- NULL
-  fishing_mortality <- NULL
-  abundance <- NULL
-  abundance_total <- NULL
-  abundance_total_suppress_median <- NULL
-  age <- NULL
-  area <- NULL
-  area_management <- NULL
-  b_trigger_isis <- NULL
-  effort_bau <- NULL
-  effort_management <- NULL
-  effort_manangement_area <- NULL
-  effort_metier_month <- NULL
-  effort_metier_month_bau <- NULL
-  effort_metier_month_management <- NULL
-  effort_metier_month_management_area <- NULL
-  effort_reduction_management_area <- NULL
-  f_msy_isis <- NULL
-  l_inf <- NULL
-  l_mat <- NULL
-  lc <- NULL
-  length_mean <- NULL
-  lopt10 <- NULL
-  median <- NULL
-  median_abundance_length <- NULL
-  metier <- NULL
-  number_cell_intersection <- NULL
-  number_cell_metier <- NULL
-  openning <- NULL
-  openning_metier <- NULL
+  #population <- NULL
+  #scenario_name <- NULL
+  # step <- NULL
+  # value <- NULL
+  # year <- NULL
+  # zone_population <- NULL
+  # simulation_name <- NULL
+  # step_quarter <- NULL
+  # fleet <- NULL
+  # catch <- NULL
+  # catch_total <- NULL
+  # fish_group <- NULL
+  # group <- NULL
+  # fishing_mortality <- NULL
+  # abundance <- NULL
+  # abundance_total <- NULL
+  # abundance_total_suppress_median <- NULL
+  # age <- NULL
+  # area <- NULL
+  # area_management <- NULL
+  # b_trigger_isis <- NULL
+  # effort_bau <- NULL
+  # effort_management <- NULL
+  # effort_manangement_area <- NULL
+  # effort_metier_month <- NULL
+  # effort_metier_month_bau <- NULL
+  # effort_metier_month_management <- NULL
+  # effort_metier_month_management_area <- NULL
+  # effort_reduction_management_area <- NULL
+  # f_msy_isis <- NULL
+  # l_inf <- NULL
+  # l_mat <- NULL
+  # lc <- NULL
+  # length_mean <- NULL
+  # lopt10 <- NULL
+  # median <- NULL
+  # median_abundance_length <- NULL
+  # metier <- NULL
+  # number_cell_intersection <- NULL
+  # number_cell_metier <- NULL
+  # openning <- NULL
+  # openning_metier <- NULL
   # 2 - Global argument check ----
   ## 2.1 - directory_path ----
   if (rlang::is_missing(directory_path)) {
@@ -103,8 +104,8 @@ outputs_simulations_settings <- function(directory_path,
                                                col_types = "cdddddddd",
                                                col_names = TRUE)
   parameters_gestion_isis_final <- parameters_gestion_isis %>%
-    dplyr::mutate(population = dplyr::replace_when(x = population,
-                                                   population == "Lophius_piscatorius" ~ "Lophius"))
+    dplyr::mutate(population = dplyr::replace_when(x = .data$population,
+                                                   .data$population == "Lophius_piscatorius" ~ "Lophius"))
   for (simulation_directory_id in seq_len(length.out = length(x = simulations_directory))) {
     simulation_directory_name <- simulations_directory[simulation_directory_id]
     message(format(x = Sys.time(),
@@ -124,9 +125,9 @@ outputs_simulations_settings <- function(directory_path,
                                                                                          stringr::str_extract(string = simulation_directory_name,
                                                                                                               pattern =  "[[:digit:]]{2}-[[:digit:]]{2}$"))),
                                         "scenario_name" = (dplyr::filter(.data = scenarios_names_referential,
-                                                                         simulation_name == stringr::str_match(simulation_directory_name,
-                                                                                                               "^(?:[^_]+_){3}([^_]+)(?=_)")[,2]) %>%
-                                                             dplyr::pull(scenario_name)))
+                                                                         .data$simulation_name == stringr::str_match(simulation_directory_name,
+                                                                                                                    "^(?:[^_]+_){3}([^_]+)(?=_)")[,2]) %>%
+                                                             dplyr::pull(.data$scenario_name)))
     current_directory_path <- file.path(directory_path,
                                         simulation_directory_name,
                                         "resultExports")
@@ -166,18 +167,18 @@ outputs_simulations_settings <- function(directory_path,
           names(current_simulation_data_improved)[length(x = current_simulation_data_improved)] <- names(x = current_csv_data)
           if (current_directory_path_files_csv[current_directory_path_files_csv_id] == "BiomasseBeginMonthFeconde.csv") {
             simulation_biomass_spawning <- list(dplyr::filter(.data = current_csv_data[[1]],
-                                                              step %% 12 == 0
-                                                              & ! (zone_population %in% c("Zone_CelticSea",
-                                                                                          "Zone_NorthernArea"))) %>%
-                                                  dplyr::mutate(year = step / 12 + as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
-                                                                                                                       pattern = "^[[:digit:]]+")),
+                                                              .data$step %% 12 == 0
+                                                              & ! (.data$zone_population %in% c("Zone_CelticSea",
+                                                                                                "Zone_NorthernArea"))) %>%
+                                                  dplyr::mutate(year = .data$step / 12 + as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
+                                                                                                                             pattern = "^[[:digit:]]+")),
                                                                 population = dplyr::case_when(
-                                                                  population == "Lophius_piscatorius" ~ "Lophius",
-                                                                  .default = population
+                                                                  .data$population == "Lophius_piscatorius" ~ "Lophius",
+                                                                  .default = .data$population
                                                                 )) %>%
-                                                  dplyr::summarise(biomass = sum(value),
-                                                                   .by = c(year,
-                                                                           population)) %>%
+                                                  dplyr::summarise(biomass = sum(.data$value),
+                                                                   .by = c(.data$year,
+                                                                           .data$population)) %>%
                                                   dplyr::mutate(scenario_name = !!current_simulation_metadata$scenario_name))
             names(simulation_biomass_spawning) <- "simulation_biomass_spawning"
             current_simulation_data_improved$BiomasseBeginMonthFeconde <- c(current_simulation_data_improved$BiomasseBeginMonthFeconde,
@@ -186,18 +187,18 @@ outputs_simulations_settings <- function(directory_path,
           if (current_directory_path_files_csv[current_directory_path_files_csv_id] == "AbondanceBeginMonth_Gpe_Janvier.csv") {
             simulation_abundance_gpe_january <-  list(dplyr::mutate(.data = current_csv_data[[1]],
                                                                     population = dplyr::case_when(
-                                                                      population == "Lophius_piscatorius" ~ "Lophius",
-                                                                      .default = population),
+                                                                      .data$population == "Lophius_piscatorius" ~ "Lophius",
+                                                                      .default = .data$population),
                                                                     scenario_name = !!current_simulation_metadata$scenario_name) %>%
-                                                        dplyr::rename(abundance = value))
+                                                        dplyr::rename(abundance = .data$value))
             names(simulation_abundance_gpe_january) <- "simulation_abundance_gpe_january"
             simulation_abundance_january <- list(dplyr::summarise(.data = current_csv_data[[1]],
-                                                                  abundance = sum(value),
-                                                                  .by = c(population,
-                                                                          year)) %>%
+                                                                  abundance = sum(.data$value),
+                                                                  .by = c(.data$population,
+                                                                          .data$year)) %>%
                                                    dplyr::mutate(population = dplyr::case_when(
-                                                     population == "Lophius_piscatorius" ~ "Lophius",
-                                                     .default = population),
+                                                     .data$population == "Lophius_piscatorius" ~ "Lophius",
+                                                     .default = .data$population),
                                                      scenario_name = !!current_simulation_metadata$scenario_name))
             names(simulation_abundance_january) <- "simulation_abundance_january"
             current_simulation_data_improved$AbondanceBeginMonth_Gpe_Janvier <- c(current_simulation_data_improved$AbondanceBeginMonth_Gpe_Janvier,
@@ -206,62 +207,62 @@ outputs_simulations_settings <- function(directory_path,
           }
           if (current_directory_path_files_csv[current_directory_path_files_csv_id] == "CatchWeightStrMetierQuarter.csv") {
             simulation_catch_weight_fleet <- list(dplyr::mutate(.data = current_csv_data[[1]],
-                                                                step_quarter = step_quarter + 1,
+                                                                step_quarter = .data$step_quarter + 1,
                                                                 scenario_name = !!current_simulation_metadata$scenario_name) %>%
-                                                    dplyr::summarise(catch = sum(value),
-                                                                     .by = c(step_quarter,
-                                                                             population,
-                                                                             fleet,
-                                                                             scenario_name)) %>%
-                                                    dplyr::relocate(step_quarter,
-                                                                    .before = catch))
+                                                    dplyr::summarise(catch = sum(.data$value),
+                                                                     .by = c(.data$step_quarter,
+                                                                             .data$population,
+                                                                             .data$fleet,
+                                                                             .data$scenario_name)) %>%
+                                                    dplyr::relocate(.data$step_quarter,
+                                                                    .before = .data$catch))
             names(simulation_catch_weight_fleet) <- "simulation_catch_weight_fleet"
             current_simulation_data_improved$CatchWeightStrMetierQuarter <- c(current_simulation_data_improved$CatchWeightStrMetierQuarter,
                                                                               simulation_catch_weight_fleet)
           }
           if (current_directory_path_files_csv[current_directory_path_files_csv_id] == "CatchWeightPopStrMetStep.csv") {
             simulation_catch_weight_fleet_month <- list(dplyr::rename(.data = current_csv_data[[1]],
-                                                                      catch = value) %>%
-                                                          dplyr::mutate(step = step + 1,
+                                                                      catch = .data$value) %>%
+                                                          dplyr::mutate(step = .data$step + 1,
                                                                         scenario_name = !!current_simulation_metadata$scenario_name,
                                                                         population = dplyr::case_when(
-                                                                          population == "Lophius_piscatorius" ~ "Lophius",
-                                                                          .default = population)) %>%
-                                                          dplyr::relocate(scenario_name,
-                                                                          .before = catch))
+                                                                          .data$population == "Lophius_piscatorius" ~ "Lophius",
+                                                                          .default = .data$population)) %>%
+                                                          dplyr::relocate(.data$scenario_name,
+                                                                          .before = .data$catch))
             names(simulation_catch_weight_fleet_month) <- "simulation_catch_weight_fleet_month"
             simulation_catch_weight_fleet_month_cumulative_sums <- list(dplyr::mutate(.data = simulation_catch_weight_fleet_month[[1]],
-                                                                                      year = as.integer(x = (step - 1) / 12 + as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
-                                                                                                                                                                  pattern = "^[[:digit:]]+")))) %>%
-                                                                          dplyr::group_by(population,
-                                                                                          fleet,
-                                                                                          year) %>%
-                                                                          dplyr::arrange(step) %>%
-                                                                          dplyr::mutate(catch_cumulative = cumsum(x = catch)) %>%
+                                                                                      year = as.integer(x = (.data$step - 1) / 12 + as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
+                                                                                                                                                                        pattern = "^[[:digit:]]+")))) %>%
+                                                                          dplyr::group_by(.data$population,
+                                                                                          .data$fleet,
+                                                                                          .data$year) %>%
+                                                                          dplyr::arrange(.data$step) %>%
+                                                                          dplyr::mutate(catch_cumulative = cumsum(x = .data$catch)) %>%
                                                                           dplyr::ungroup() %>%
-                                                                          dplyr::select(-c(year,
-                                                                                           catch)))
+                                                                          dplyr::select(-c(.data$year,
+                                                                                           .data$catch)))
             names(simulation_catch_weight_fleet_month_cumulative_sums) <- "simulation_catch_weight_fleet_month_cumulative_sums"
             simulation_catch_weight_month_cumulative_sums <- list(dplyr::mutate(.data = simulation_catch_weight_fleet_month[[1]],
-                                                                                year = as.integer(x = (step - 1) / 12 + as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
-                                                                                                                                                            pattern = "^[[:digit:]]+")))) %>%
-                                                                    dplyr::group_by(population,
-                                                                                    year,
-                                                                                    step) %>%
-                                                                    dplyr::mutate(catch_total = sum(catch)) %>%
+                                                                                year = as.integer(x = (.data$step - 1) / 12 + as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
+                                                                                                                                                                  pattern = "^[[:digit:]]+")))) %>%
+                                                                    dplyr::group_by(.data$population,
+                                                                                    .data$year,
+                                                                                    .data$step) %>%
+                                                                    dplyr::mutate(catch_total = sum(.data$catch)) %>%
                                                                     dplyr::ungroup() %>%
-                                                                    dplyr::select(population,
-                                                                                  year,
-                                                                                  step,
-                                                                                  catch_total) %>%
+                                                                    dplyr::select(.data$population,
+                                                                                  .data$year,
+                                                                                  .data$step,
+                                                                                  .data$catch_total) %>%
                                                                     dplyr::distinct() %>%
-                                                                    dplyr::group_by(population,
-                                                                                    year) %>%
-                                                                    dplyr::arrange(step) %>%
-                                                                    dplyr::mutate(catch_cumulative = cumsum(x = catch_total)) %>%
+                                                                    dplyr::group_by(.data$population,
+                                                                                    .data$year) %>%
+                                                                    dplyr::arrange(.data$step) %>%
+                                                                    dplyr::mutate(catch_cumulative = cumsum(x = .data$catch_total)) %>%
                                                                     dplyr::ungroup() %>%
-                                                                    dplyr::select(-c(year,
-                                                                                     catch_total)))
+                                                                    dplyr::select(-c(.data$year,
+                                                                                     .data$catch_total)))
             names(simulation_catch_weight_month_cumulative_sums) <- "simulation_catch_weight_month_cumulative_sums"
             current_simulation_data_improved$CatchWeightPopStrMetStep <- c(current_simulation_data_improved$CatchWeightPopStrMetStep,
                                                                            simulation_catch_weight_fleet_month,
@@ -270,48 +271,48 @@ outputs_simulations_settings <- function(directory_path,
           }
           if (current_directory_path_files_csv[current_directory_path_files_csv_id] == "EffortsNominalMetier.csv") {
             simulation_effort_nominal_metier_start_year_month <- list(dplyr::mutate(.data = current_csv_data[[1]],
-                                                                                    year = as.integer(step / 12 + as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
-                                                                                                                                                      pattern = "^[[:digit:]]+"))),
-                                                                                    step = step + 1,
+                                                                                    year = as.integer(.data$step / 12 + as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
+                                                                                                                                                            pattern = "^[[:digit:]]+"))),
+                                                                                    step = .data$step + 1,
                                                                                     scenario_name = !!current_simulation_metadata$scenario_name) %>%
-                                                                        dplyr::filter(year == as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
-                                                                                                                                  pattern = "^[[:digit:]]+"))))
+                                                                        dplyr::filter(.data$year == as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
+                                                                                                                                        pattern = "^[[:digit:]]+"))))
             names(simulation_effort_nominal_metier_start_year_month) <- "simulation_effort_nominal_metier_start_year_month"
             current_simulation_data_improved$EffortsNominalMetier <- c(current_simulation_data_improved$EffortsNominalMetier,
                                                                        simulation_effort_nominal_metier_start_year_month)
           }
           if (current_directory_path_files_csv[current_directory_path_files_csv_id] == "MortalitePecheGroupe.csv") {
             simulation_fishing_mortality_group <- list(dplyr::mutate(.data = current_csv_data[[1]],
-                                                                     year = as.integer(step / 12 + as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
-                                                                                                                                       pattern = "^[[:digit:]]+"))),
+                                                                     year = as.integer(.data$step / 12 + as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
+                                                                                                                                             pattern = "^[[:digit:]]+"))),
                                                                      scenario_name = !!current_simulation_metadata$scenario_name,
                                                                      population = dplyr::case_when(
-                                                                       population == "Lophius_piscatorius" ~ "Lophius",
-                                                                       .default = population)) %>%
-                                                         dplyr::rename(fishing_mortality = value,
-                                                                       group = fish_group) %>%
-                                                         dplyr::select(year,
-                                                                       population,
-                                                                       group,
-                                                                       fishing_mortality,
-                                                                       scenario_name))
+                                                                       .data$population == "Lophius_piscatorius" ~ "Lophius",
+                                                                       .default = .data$population)) %>%
+                                                         dplyr::rename(fishing_mortality = .data$value,
+                                                                       group = .data$fish_group) %>%
+                                                         dplyr::select(.data$year,
+                                                                       .data$population,
+                                                                       .data$group,
+                                                                       .data$fishing_mortality,
+                                                                       .data$scenario_name))
             names(simulation_fishing_mortality_group) <- "simulation_fishing_mortality_group"
             current_simulation_data_improved$MortalitePecheGroupe <- c(current_simulation_data_improved$MortalitePecheGroupe,
                                                                        simulation_fishing_mortality_group)
           }
           if (current_directory_path_files_csv[current_directory_path_files_csv_id] == "MortalitePecheTotale.csv") {
             simulation_fishing_mortality_total <- list(dplyr::mutate(.data = current_csv_data[[1]],
-                                                                     year = as.integer(step / 12 + as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
-                                                                                                                                       pattern = "^[[:digit:]]+"))),
+                                                                     year = as.integer(.data$step / 12 + as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
+                                                                                                                                             pattern = "^[[:digit:]]+"))),
                                                                      scenario_name = !!current_simulation_metadata$scenario_name,
                                                                      population = dplyr::case_when(
-                                                                       population == "Lophius_piscatorius" ~ "Lophius",
-                                                                       .default = population)) %>%
-                                                         dplyr::rename(fishing_mortality = value) %>%
-                                                         dplyr::select(year,
-                                                                       population,
-                                                                       fishing_mortality,
-                                                                       scenario_name))
+                                                                       .data$population == "Lophius_piscatorius" ~ "Lophius",
+                                                                       .default = .data$population)) %>%
+                                                         dplyr::rename(fishing_mortality = .data$value) %>%
+                                                         dplyr::select(.data$year,
+                                                                       .data$population,
+                                                                       .data$fishing_mortality,
+                                                                       .data$scenario_name))
             names(simulation_fishing_mortality_total) <- "simulation_fishing_mortality_total"
             current_simulation_data_improved$MortalitePecheTotale <- c(current_simulation_data_improved$MortalitePecheTotale,
                                                                        simulation_fishing_mortality_total)
@@ -381,47 +382,47 @@ outputs_simulations_settings <- function(directory_path,
                                                  col_types = "ciiddddd",
                                                  col_names = TRUE)
       abundance_length <- dplyr::select(.data = parameters_biological,
-                                        -age) %>%
+                                        -.data$age) %>%
         dplyr::left_join(simulation_final$simulations_data_improved_merged$AbondanceBeginMonth_Gpe_Janvier$simulation_abundance_gpe_january,
                          by = c("population",
                                 "group")) %>%
-        dplyr::group_by(population,
-                        scenario_name,
-                        year,
-                        length) %>%
-        dplyr::mutate(abundance_length = sum(abundance)) %>%
+        dplyr::group_by(.data$population,
+                        .data$scenario_name,
+                        .data$year,
+                        .data$length) %>%
+        dplyr::mutate(abundance_length = sum(.data$abundance)) %>%
         dplyr::ungroup() %>%
         dplyr::distinct() %>%
-        dplyr::select(-abundance)
+        dplyr::select(-.data$abundance)
       length_mean_lc_lfm <- dplyr::group_by(.data = abundance_length,
-                                            population,
-                                            scenario_name,
-                                            year) %>%
-        dplyr::mutate(median_abundance_length = median(abundance_length)) %>%
-        dplyr::filter(abundance_length > median_abundance_length) %>%
-        dplyr::mutate(abundance_total_suppress_median = sum(abundance_length)) %>%
-        dplyr::reframe(length_mean = sum(abundance_length * length) / abundance_total_suppress_median,
-                       lc = min(length),
-                       lfm = 0.75 * lc + 0.25 * l_inf,
-                       l_inf = l_inf,
-                       l_mat = l_mat,
-                       l_opt = (2 / 3) * l_inf) %>%
+                                            .data$population,
+                                            .data$scenario_name,
+                                            .data$year) %>%
+        dplyr::mutate(median_abundance_length = stats::median(x = .data$abundance_length)) %>%
+        dplyr::filter(.data$abundance_length > .data$median_abundance_length) %>%
+        dplyr::mutate(abundance_total_suppress_median = sum(.data$abundance_length)) %>%
+        dplyr::reframe(length_mean = sum(.data$abundance_length * .data$length) / .data$abundance_total_suppress_median,
+                       lc = min(.data$length),
+                       lfm = 0.75 * .data$lc + 0.25 * .data$l_inf,
+                       l_inf = .data$l_inf,
+                       l_mat = .data$l_mat,
+                       l_opt = (2 / 3) * .data$l_inf) %>%
         dplyr::distinct()
-      proportion_mega <- dplyr::mutate(.data = abundance_length,
-                                       lopt10 = (2 / 3) * l_inf * 1.1) %>%
-        dplyr::group_by(population,
-                        scenario_name,
-                        year) %>%
-        dplyr::mutate(abundance_total = sum(abundance_length)) %>%
-        dplyr::filter(length > lopt10) %>%
-        dplyr::reframe(proportion_mega = sum(abundance_length) / abundance_total) %>%
+      proportion_mega <- dplyr::mutate(.data = .data$abundance_length,
+                                       lopt10 = (2 / 3) * .data$l_inf * 1.1) %>%
+        dplyr::group_by(.data$population,
+                        .data$scenario_name,
+                        .data$year) %>%
+        dplyr::mutate(abundance_total = sum(.data$abundance_length)) %>%
+        dplyr::filter(.data$length > .data$lopt10) %>%
+        dplyr::reframe(proportion_mega = sum(.data$abundance_length) / .data$abundance_total) %>%
         dplyr::distinct()
       length_mean_lc_lfm_proportion_mega <- list(dplyr::left_join(x = length_mean_lc_lfm,
                                                                   y = proportion_mega,
                                                                   by = c("population",
                                                                          "scenario_name",
                                                                          "year")) %>%
-                                                   tidyr::pivot_longer(cols = length_mean:proportion_mega,
+                                                   tidyr::pivot_longer(cols = .data$length_mean:.data$proportion_mega,
                                                                        names_to = "indicateur",
                                                                        values_to = "value"))
       names(length_mean_lc_lfm_proportion_mega) = "length_mean_lc_lfm_proportion_mega"
@@ -433,8 +434,8 @@ outputs_simulations_settings <- function(directory_path,
     if ("simulation_biomass_spawning" %in% names(x = simulation_final$simulations_data_improved_merged$BiomasseBeginMonthFeconde)) {
       simulation_biomass_spawning_final <- list(dplyr::left_join(x = simulation_final$simulations_data_improved_merged$BiomasseBeginMonthFeconde$simulation_biomass_spawning,
                                                                  y = dplyr::select(.data = parameters_gestion_isis_final,
-                                                                                   population,
-                                                                                   b_trigger_isis),
+                                                                                   .data$population,
+                                                                                   .data$b_trigger_isis),
                                                                  by = "population"))
       names(simulation_biomass_spawning_final) <- "simulation_biomass_spawning_final"
       simulation_final$simulations_data_improved_merged$BiomasseBeginMonthFeconde <- c(simulation_final$simulations_data_improved_merged$BiomasseBeginMonthFeconde,
@@ -444,46 +445,46 @@ outputs_simulations_settings <- function(directory_path,
   if ("EffortsNominalMetier" %in% names(x = simulation_final$simulations_data_improved_merged)) {
     if ("simulation_effort_nominal_metier_start_year_month" %in% names(x = simulation_final$simulations_data_improved_merged$EffortsNominalMetier)) {
       simulation_effort_nominal_metier_start_year_month_total <- dplyr::group_by(.data = simulation_final$simulations_data_improved_merged$EffortsNominalMetier$simulation_effort_nominal_metier_start_year_month,
-                                                                                 metier,
-                                                                                 step,
-                                                                                 scenario_name) %>%
-        dplyr::mutate(effort_metier_month = sum(value)) %>%
+                                                                                 .data$metier,
+                                                                                 .data$step,
+                                                                                 .data$scenario_name) %>%
+        dplyr::mutate(effort_metier_month = sum(.data$value)) %>%
         dplyr::ungroup() %>%
-        dplyr::select(metier,
-                      step,
-                      effort_metier_month,
-                      scenario_name) %>%
+        dplyr::select(.data$metier,
+                      .data$step,
+                      .data$effort_metier_month,
+                      .data$scenario_name) %>%
         dplyr::distinct()
       simulation_effort_nominal_metier_start_year_month_bau <- dplyr::filter(.data = simulation_effort_nominal_metier_start_year_month_total,
-                                                                             scenario_name == "BAU") %>%
-        dplyr::rename(effort_metier_month_bau = effort_metier_month) %>%
-        dplyr::select(-scenario_name)
+                                                                             .data$scenario_name == "BAU") %>%
+        dplyr::rename(effort_metier_month_bau = .data$effort_metier_month) %>%
+        dplyr::select(-.data$scenario_name)
       simulation_effort_nominal_metier_start_year_month <- dplyr::filter(.data = simulation_effort_nominal_metier_start_year_month_total,
-                                                                         scenario_name != "BAU")
+                                                                         .data$scenario_name != "BAU")
       area_metier <- readr::read_delim(file = system.file("extdata",
                                                           "data_intersections.txt",
                                                           package = "isisinsight"),
                                        delim = ";",
                                        col_types = "cciii",
                                        col_names = TRUE) %>%
-        dplyr::filter(area_management != "zbsi_penatules")
+        dplyr::filter(.data$area_management != "zbsi_penatules")
       strange_metier <- dplyr::select(.data = simulation_effort_nominal_metier_start_year_month_bau,
-                                      metier) %>%
+                                      .data$metier) %>%
         dplyr::distinct() %>%
-        dplyr::filter(stringr::str_detect(string = metier,
+        dplyr::filter(stringr::str_detect(string = .data$metier,
                                           pattern = "27.8")) %>%
-        dplyr::mutate(area = stringr::str_extract(string = metier,
+        dplyr::mutate(area = stringr::str_extract(string = .data$metier,
                                                   pattern = "(?<=27\\.).+"))
       area_metier_8ab <- dplyr::filter(.data = area_metier,
-                                       metier %in% c("8.a",
-                                                     "8.b")) %>%
-        dplyr::rename(area = metier) %>%
+                                       .data$metier %in% c("8.a",
+                                                           "8.b")) %>%
+        dplyr::rename(area = .data$metier) %>%
         dplyr::right_join(strange_metier,
                           by = "area") %>%
-        dplyr::select(-area)
+        dplyr::select(-.data$area)
       area_metier <- dplyr::filter(.data = area_metier,
-                                   metier %in% c("8.a",
-                                                 "8.b")) %>%
+                                   .data$metier %in% c("8.a",
+                                                       "8.b")) %>%
         dplyr::bind_rows(area_metier_8ab)
       area_month_openning_referential <- readr::read_delim(file = system.file("extdata",
                                                                               "area_month_openning_referential.txt",
@@ -492,7 +493,7 @@ outputs_simulations_settings <- function(directory_path,
       area_month_openning <- dplyr::left_join(x = area_month_openning_referential,
                                               y = scenarios_names_referential,
                                               by = "simulation_name") %>%
-        dplyr::select(-simulation_name)
+        dplyr::select(-.data$simulation_name)
       metier_referential <- readLines(con = system.file("extdata",
                                                         "metier_referential.txt",
                                                         package = "isisinsight"))
@@ -506,46 +507,46 @@ outputs_simulations_settings <- function(directory_path,
                                              dplyr::left_join(area_metier,
                                                               by = c("metier",
                                                                      "area_management")) %>%
-                                             dplyr::rename(openning_metier = openning) %>%
+                                             dplyr::rename(openning_metier = .data$openning) %>%
                                              dplyr::mutate(openning_metier = dplyr::case_when(
-                                               area_management == "Zone_Coraux" ~ 0,
-                                               (scenario_name == "O-D-3_miles"
-                                                & (! metier %in% !!metier_referential)
-                                                & stringr::str_detect(metier,
+                                               .data$area_management == "Zone_Coraux" ~ 0,
+                                               (.data$scenario_name == "O-D-3_miles"
+                                                & (! .data$metier %in% !!metier_referential)
+                                                & stringr::str_detect(.data$metier,
                                                                       "0-10"))
-                                               | (scenario_name == "O-G-Frayere"
-                                                  & (! stringr::str_detect(metier,
+                                               | (.data$scenario_name == "O-G-Frayere"
+                                                  & (! stringr::str_detect(.data$metier,
                                                                            "G"))
-                                                  & (! stringr::str_detect(metier,
+                                                  & (! stringr::str_detect(.data$metier,
                                                                            "O")))
-                                               | (scenario_name %in% c("G-Trim1",
-                                                                       "G-Fevr",
-                                                                       "G-1/3-Trim1")
-                                                  & (! stringr::str_detect(metier,
+                                               | (.data$scenario_name %in% c("G-Trim1",
+                                                                             "G-Fevr",
+                                                                             "G-1/3-Trim1")
+                                                  & (! stringr::str_detect(.data$metier,
                                                                            "G"))) ~ 1,
-                                               .default = openning_metier),
+                                               .default = .data$openning_metier),
                                                effort_metier_month_management = dplyr::case_when(
-                                                 number_cell_metier == 0 ~ 0,
-                                                 .default = (effort_metier_month * number_cell_intersection / number_cell_metier)
+                                                 .data$number_cell_metier == 0 ~ 0,
+                                                 .default = (.data$effort_metier_month * .data$number_cell_intersection / .data$number_cell_metier)
                                                ),
-                                               effort_metier_month_management_area = effort_metier_month_management * openning_metier) %>%
-                                             dplyr::group_by(area_management,
-                                                             scenario_name) %>%
-                                             dplyr::summarise(effort_management = sum(effort_metier_month_management,
+                                               effort_metier_month_management_area = .data$effort_metier_month_management * .data$openning_metier) %>%
+                                             dplyr::group_by(.data$area_management,
+                                                             .data$scenario_name) %>%
+                                             dplyr::summarise(effort_management = sum(.data$effort_metier_month_management,
                                                                                       na.rm = TRUE),
-                                                              effort_manangement_area = sum(effort_metier_month_management_area,
+                                                              effort_manangement_area = sum(.data$effort_metier_month_management_area,
                                                                                             na.rm = TRUE),
-                                                              effort_bau = sum(effort_metier_month_bau,
+                                                              effort_bau = sum(.data$effort_metier_month_bau,
                                                                                na.rm = TRUE)) %>%
                                              dplyr::mutate(effort_reduction_management_area = dplyr::case_when(
-                                               effort_bau == 0 ~ 0,
-                                               .default = ((effort_bau - effort_manangement_area) / effort_bau) * 100
+                                               .data$effort_bau == 0 ~ 0,
+                                               .default = ((.data$effort_bau - .data$effort_manangement_area) / .data$effort_bau) * 100
                                              )) %>%
-                                             dplyr::select(scenario_name,
-                                                           area_management,
-                                                           effort_management,
-                                                           effort_manangement_area,
-                                                           effort_reduction_management_area))
+                                             dplyr::select(.data$scenario_name,
+                                                           .data$area_management,
+                                                           .data$effort_management,
+                                                           .data$effort_manangement_area,
+                                                           .data$effort_reduction_management_area))
       names(effort_management_diagnostic) <- "effort_management_diagnostic"
       simulation_final$simulations_data_improved_merged$EffortsNominalMetier <- c(simulation_final$simulations_data_improved_merged$EffortsNominalMetier,
                                                                                   effort_management_diagnostic)
@@ -555,8 +556,8 @@ outputs_simulations_settings <- function(directory_path,
     if ("simulation_fishing_mortality_group" %in% names(x = simulation_final$simulations_data_improved_merged$MortalitePecheGroupe)) {
       simulation_fishing_mortality_group_final <- list(dplyr::left_join(x = simulation_final$simulations_data_improved_merged$MortalitePecheGroupe$simulation_fishing_mortality_group,
                                                                         y = dplyr::select(.data = parameters_gestion_isis_final,
-                                                                                          population,
-                                                                                          f_msy_isis),
+                                                                                          .data$population,
+                                                                                          .data$f_msy_isis),
                                                                         by = "population"))
       names(simulation_fishing_mortality_group_final) <- "simulation_fishing_mortality_group_final"
       simulation_final$simulations_data_improved_merged$MortalitePecheGroupe <- c(simulation_final$simulations_data_improved_merged$MortalitePecheGroupe,
@@ -567,8 +568,8 @@ outputs_simulations_settings <- function(directory_path,
     if ("simulation_fishing_mortality_total" %in% names(x = simulation_final$simulations_data_improved_merged$MortalitePecheTotale)) {
       simulation_fishing_mortality_total_final <- list(dplyr::left_join(x = simulation_final$simulations_data_improved_merged$MortalitePecheTotale$simulation_fishing_mortality_total,
                                                                         y = dplyr::select(.data = parameters_gestion_isis_final,
-                                                                                          population,
-                                                                                          f_msy_isis),
+                                                                                          .data$population,
+                                                                                          .data$f_msy_isis),
                                                                         by = "population"))
       names(simulation_fishing_mortality_total_final) <- "simulation_fishing_mortality_total_final"
       simulation_final$simulations_data_improved_merged$MortalitePecheTotale <- c(simulation_final$simulations_data_improved_merged$MortalitePecheTotale,
