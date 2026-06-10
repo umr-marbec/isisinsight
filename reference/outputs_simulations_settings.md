@@ -43,5 +43,5 @@ simulation.
 #replace the value of directory_path by a correct path
 try(outputs_simulations_settings(directory_path = "my/path/to/simulations/directory"))
 #> Error in outputs_simulations_settings(directory_path = "my/path/to/simulations/directory") : 
-#>   2026-06-03 13:34:14 - Error, no input simulation available in the directory path.
+#>   2026-06-10 10:45:25 - Error, no input simulation available in the directory path.
 ```
