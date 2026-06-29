@@ -2,8 +2,10 @@
 #' @description
 #' Function for ISIS-Fish outputs simulations formatting and manipulation.
 #' @param directory_path Mandatory. Class character expected. Directory path of the ISIS-Fish outputs simulations.
-#' @param output_path Optional. Default NULL. Output path for saved data from function element "simulations_data_improved_merged". If the value is NULL, nothing will be exported.
-#' @param output_format Optional. Default "rds". Output(s) format expected. You wan choose between .rds or .csv (with ";" for the delimiter).
+#' @param output_path Optional. Default NULL. Class character expected. Output path for saved data from function element "simulations_data_improved_merged". If the value is NULL, nothing will be exported.
+#' @param output_format Mandatory. Default "rds". Class character expected. Output(s) format expected. You wan choose between .rds or .csv (with ";" for the delimiter).
+#' @param input_colnames Mandatory. Default TRUE. Class logical expected. Does the input(s) file(s) contain colnames. You can use the next argument to define more precisely the input file(s) concern.
+#' @param input_colnames_ids_names Optional. Default NULL. Class character expected. Related to the previous argument, this one defines which input contains colname. If NULL, all the input contains colname.
 #' @return The function returns a list with a length in relation to the number of simulation directory provided. Each element of the list has information about metadata and data (original and improved) associated with the simulation.
 #' @export
 #' @importFrom rlang .data
@@ -13,74 +15,45 @@
 #'
 outputs_simulations_settings <- function(directory_path,
                                          output_path = NULL,
-                                         output_format = "rds") {
-  # 1 - Global variable assignment ----
-  #population <- NULL
-  #scenario_name <- NULL
-  # step <- NULL
-  # value <- NULL
-  # year <- NULL
-  # zone_population <- NULL
-  # simulation_name <- NULL
-  # step_quarter <- NULL
-  # fleet <- NULL
-  # catch <- NULL
-  # catch_total <- NULL
-  # fish_group <- NULL
-  # group <- NULL
-  # fishing_mortality <- NULL
-  # abundance <- NULL
-  # abundance_total <- NULL
-  # abundance_total_suppress_median <- NULL
-  # age <- NULL
-  # area <- NULL
-  # area_management <- NULL
-  # b_trigger_isis <- NULL
-  # effort_bau <- NULL
-  # effort_management <- NULL
-  # effort_manangement_area <- NULL
-  # effort_metier_month <- NULL
-  # effort_metier_month_bau <- NULL
-  # effort_metier_month_management <- NULL
-  # effort_metier_month_management_area <- NULL
-  # effort_reduction_management_area <- NULL
-  # f_msy_isis <- NULL
-  # l_inf <- NULL
-  # l_mat <- NULL
-  # lc <- NULL
-  # length_mean <- NULL
-  # lopt10 <- NULL
-  # median <- NULL
-  # median_abundance_length <- NULL
-  # metier <- NULL
-  # number_cell_intersection <- NULL
-  # number_cell_metier <- NULL
-  # openning <- NULL
-  # openning_metier <- NULL
-  # 2 - Global argument check ----
-  ## 2.1 - directory_path ----
+                                         output_format = "rds",
+                                         input_colnames = TRUE,
+                                         input_colnames_ids_names = NULL) {
+  # 1 - Global argument check ----
+  ## 1.1 - directory_path ----
   if (rlang::is_missing(directory_path)) {
     stop("The `directory_path` argument is required.")
   }
   checkmate::assert_character(x = directory_path,
                               len = 1)
-  ## 2.2 - output_path ----
+  ## 1.2 - output_path ----
   if (rlang::is_missing(output_path)) {
     stop("The `output_path` argument is required.")
   }
   checkmate::assert_character(x = output_path,
                               len = 1,
                               null.ok = TRUE)
-  ## 2.3 - output_format ----
-  if (! is.null(x = output_path)) {
-    if (rlang::is_missing(output_format)) {
-      stop("The `output_format` argument is required.")
-    }
-    checkmate::assert_choice(x = output_format,
-                             choices = c("rds",
-                                         "csv"))
+  ## 1.3 - output_format ----
+  if (rlang::is_missing(output_format)) {
+    stop("The `output_format` argument is required.")
   }
-  # 3 - Global process ----
+  checkmate::assert_choice(x = output_format,
+                           choices = c("rds",
+                                       "csv"))
+  ## 1.4 - input_colnames ----
+  if (rlang::is_missing(input_colnames)) {
+    stop("The `input_colnames` argument is required.")
+  }
+  checkmate::assert_logical(x = input_colnames,
+                            len = 1)
+  ## 1.5 - input_colnames_ids_names ----
+  if (rlang::is_missing(input_colnames_ids_names)) {
+    stop("The `input_colnames_ids_names` argument is required.")
+  }
+  checkmate::assert_character(x = input_colnames_ids_names,
+                              min.len = 1,
+                              null.ok = TRUE,
+                              unique = TRUE)
+  # 2 - Global process ----
   simulations_directory <- list.dirs(path = directory_path,
                                      full.names = FALSE,
                                      recursive = FALSE)
@@ -126,7 +99,7 @@ outputs_simulations_settings <- function(directory_path,
                                                                                                               pattern =  "[[:digit:]]{2}-[[:digit:]]{2}$"))),
                                         "scenario_name" = (dplyr::filter(.data = scenarios_names_referential,
                                                                          .data$simulation_name == stringr::str_match(simulation_directory_name,
-                                                                                                                    "^(?:[^_]+_){3}([^_]+)(?=_)")[,2]) %>%
+                                                                                                                     "^(?:[^_]+_){3}([^_]+)(?=_)")[,2]) %>%
                                                              dplyr::pull(.data$scenario_name)))
     current_directory_path <- file.path(directory_path,
                                         simulation_directory_name,
@@ -151,13 +124,28 @@ outputs_simulations_settings <- function(directory_path,
                                                                                            replacement = "_referential.txt"),
                                                                       package = "isisinsight"),
                                                    show_col_types = FALSE)
-          current_csv_data  <- list(readr::read_delim(file = file.path(current_directory_path,
-                                                                       current_directory_path_files_csv[current_directory_path_files_csv_id]),
-                                                      col_names = current_referential$colname,
-                                                      delim = ";",
-                                                      col_types = paste0(current_referential$type,
-                                                                         collapse = ""),
-                                                      locale = readr::locale(decimal_mark = ".")))
+          if (input_colnames == TRUE
+              && (is.null(x = input_colnames_ids_names)
+                  || stringr::str_remove(string = current_directory_path_files_csv[current_directory_path_files_csv_id],
+                                         pattern = "\\.csv$") %in% input_colnames_ids_names)) {
+            current_csv_data  <- list(readr::read_delim(file = file.path(current_directory_path,
+                                                                         current_directory_path_files_csv[current_directory_path_files_csv_id]),
+                                                        col_names = current_referential$colname,
+                                                        delim = ";",
+                                                        col_types = paste0(current_referential$type,
+                                                                           collapse = ""),
+                                                        locale = readr::locale(decimal_mark = "."),
+                                                        skip = 1))
+
+          } else {
+            current_csv_data  <- list(readr::read_delim(file = file.path(current_directory_path,
+                                                                         current_directory_path_files_csv[current_directory_path_files_csv_id]),
+                                                        col_names = current_referential$colname,
+                                                        delim = ";",
+                                                        col_types = paste0(current_referential$type,
+                                                                           collapse = ""),
+                                                        locale = readr::locale(decimal_mark = ".")))
+          }
           names(x = current_csv_data) <- stringr::str_match(string = current_directory_path_files_csv[current_directory_path_files_csv_id],
                                                             pattern = "(.+)\\.csv$")[, 2]
           current_simulation_data_ori <- c(current_simulation_data_ori,
@@ -408,7 +396,7 @@ outputs_simulations_settings <- function(directory_path,
                        l_mat = .data$l_mat,
                        l_opt = (2 / 3) * .data$l_inf) %>%
         dplyr::distinct()
-      proportion_mega <- dplyr::mutate(.data = .data$abundance_length,
+      proportion_mega <- dplyr::mutate(.data = abundance_length,
                                        lopt10 = (2 / 3) * .data$l_inf * 1.1) %>%
         dplyr::group_by(.data$population,
                         .data$scenario_name,
@@ -576,7 +564,7 @@ outputs_simulations_settings <- function(directory_path,
                                                                                   simulation_fishing_mortality_total_final)
     }
   }
-  ## 3.x - Output(s) export(s) ----
+  ## 2.x - Output(s) export(s) ----
   if (! is.null(x = output_path)
       && length(x = simulation_final$simulations_data_improved_merged) != 0) {
     final_output_path <- file.path(output_path,
