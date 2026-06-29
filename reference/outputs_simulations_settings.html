@@ -40,7 +40,9 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">outputs_simulations_settings</span><span class="op">(</span></span>
 <span>  <span class="va">directory_path</span>,</span>
 <span>  output_path <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  output_format <span class="op">=</span> <span class="st">"rds"</span></span>
+<span>  output_format <span class="op">=</span> <span class="st">"rds"</span>,</span>
+<span>  input_colnames <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  input_colnames_ids_names <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -53,11 +55,19 @@
 
 
 <dt id="arg-output-path">output_path<a class="anchor" aria-label="anchor" href="#arg-output-path"></a></dt>
-<dd><p>Optional. Default NULL. Output path for saved data from function element "simulations_data_improved_merged". If the value is NULL, nothing will be exported.</p></dd>
+<dd><p>Optional. Default NULL. Class character expected. Output path for saved data from function element "simulations_data_improved_merged". If the value is NULL, nothing will be exported.</p></dd>
 
 
 <dt id="arg-output-format">output_format<a class="anchor" aria-label="anchor" href="#arg-output-format"></a></dt>
-<dd><p>Optional. Default "rds". Output(s) format expected. You wan choose between .rds or .csv (with ";" for the delimiter).</p></dd>
+<dd><p>Mandatory. Default "rds". Class character expected. Output(s) format expected. You wan choose between .rds or .csv (with ";" for the delimiter).</p></dd>
+
+
+<dt id="arg-input-colnames">input_colnames<a class="anchor" aria-label="anchor" href="#arg-input-colnames"></a></dt>
+<dd><p>Mandatory. Default TRUE. Class logical expected. Does the input(s) file(s) contain colnames. You can use the next argument to define more precisely the input file(s) concern.</p></dd>
+
+
+<dt id="arg-input-colnames-ids-names">input_colnames_ids_names<a class="anchor" aria-label="anchor" href="#arg-input-colnames-ids-names"></a></dt>
+<dd><p>Optional. Default NULL. Class character expected. Related to the previous argument, this one defines which input contains colname. If NULL, all the input contains colname.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -70,7 +80,7 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">#replace the value of directory_path by a correct path</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="fu">outputs_simulations_settings</span><span class="op">(</span>directory_path <span class="op">=</span> <span class="st">"my/path/to/simulations/directory"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Error in outputs_simulations_settings(directory_path = "my/path/to/simulations/directory") : </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   2026-06-10 10:45:25 - Error, no input simulation available in the directory path.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2026-06-29 11:24:42 - Error, no input simulation available in the directory path.</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
