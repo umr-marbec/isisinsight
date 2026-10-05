@@ -9,7 +9,8 @@ outputs_simulations_settings(
   output_path = NULL,
   output_format = "rds",
   input_colnames = TRUE,
-  input_colnames_ids_names = NULL
+  input_colnames_ids_names = NULL,
+  round_significant_digits = 5L
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ outputs_simulations_settings(
 \item{input_colnames}{Mandatory. Default TRUE. Class logical expected. Does the input(s) file(s) contain colnames. You can use the next argument to define more precisely the input file(s) concern.}
 
 \item{input_colnames_ids_names}{Optional. Default NULL. Class character expected. Related to the previous argument, this one defines which input contains colname. If NULL, all the input contains colname.}
+
+\item{round_significant_digits}{Mandatory. Default 5. Class integer expected. Round on a number of significant digits. Maximum 21.}
 }
 \value{
 The function returns a list with a length in relation to the number of simulation directory provided. Each element of the list has information about metadata and data (original and improved) associated with the simulation.

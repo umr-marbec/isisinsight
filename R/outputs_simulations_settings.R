@@ -6,6 +6,7 @@
 #' @param output_format Mandatory. Default "rds". Class character expected. Output(s) format expected. You wan choose between .rds or .csv (with ";" for the delimiter).
 #' @param input_colnames Mandatory. Default TRUE. Class logical expected. Does the input(s) file(s) contain colnames. You can use the next argument to define more precisely the input file(s) concern.
 #' @param input_colnames_ids_names Optional. Default NULL. Class character expected. Related to the previous argument, this one defines which input contains colname. If NULL, all the input contains colname.
+#' @param round_significant_digits Mandatory. Default 5. Class integer expected. Round on a number of significant digits. Maximum 21.
 #' @return The function returns a list with a length in relation to the number of simulation directory provided. Each element of the list has information about metadata and data (original and improved) associated with the simulation.
 #' @export
 #' @importFrom rlang .data
@@ -17,50 +18,42 @@ outputs_simulations_settings <- function(directory_path,
                                          output_path = NULL,
                                          output_format = "rds",
                                          input_colnames = TRUE,
-                                         input_colnames_ids_names = NULL) {
-  # 1 - Global argument check ----
-  ## 1.1 - directory_path ----
-  if (rlang::is_missing(directory_path)) {
-    stop("The `directory_path` argument is required.")
-  }
+                                         input_colnames_ids_names = NULL,
+                                         round_significant_digits = 5L) {
+  # Log setup ----
+  log_storage <- sparck::log_storage()
+  logger::log_appender(logger::appender_console,
+                       index = 1)
+  logger::log_appender(sparck::log_appender_tibble(name_log_tibble = "log_storage"),
+                       index = 2)
+  # Global argument check ----
+  ## directory_path ----
   checkmate::assert_character(x = directory_path,
                               len = 1)
-  ## 1.2 - output_path ----
-  if (rlang::is_missing(output_path)) {
-    stop("The `output_path` argument is required.")
-  }
+  ## output_path ----
   checkmate::assert_character(x = output_path,
                               len = 1,
                               null.ok = TRUE)
-  ## 1.3 - output_format ----
-  if (rlang::is_missing(output_format)) {
-    stop("The `output_format` argument is required.")
-  }
+  ## output_format ----
   checkmate::assert_choice(x = output_format,
                            choices = c("rds",
                                        "csv"))
-  ## 1.4 - input_colnames ----
-  if (rlang::is_missing(input_colnames)) {
-    stop("The `input_colnames` argument is required.")
-  }
+  ## input_colnames ----
   checkmate::assert_logical(x = input_colnames,
                             len = 1)
-  ## 1.5 - input_colnames_ids_names ----
-  if (rlang::is_missing(input_colnames_ids_names)) {
-    stop("The `input_colnames_ids_names` argument is required.")
-  }
+  ## input_colnames_ids_names ----
   checkmate::assert_character(x = input_colnames_ids_names,
                               min.len = 1,
                               null.ok = TRUE,
                               unique = TRUE)
-  # 2 - Global process ----
+  # Global process ----
   simulations_directory <- list.dirs(path = directory_path,
                                      full.names = FALSE,
                                      recursive = FALSE)
   if (length(x = simulations_directory) == 0) {
-    stop(format(x = Sys.time(),
-                "%Y-%m-%d %H:%M:%S"),
-         " - Error, no input simulation available in the directory path.")
+    logger::log_error("No input simulation available in the directory path.")
+    stop("Process stopped",
+         call. = FALSE)
   }
   simulation_final <- vector("list",
                              2)
@@ -81,10 +74,7 @@ outputs_simulations_settings <- function(directory_path,
                                                    .data$population == "Lophius_piscatorius" ~ "Lophius"))
   for (simulation_directory_id in seq_len(length.out = length(x = simulations_directory))) {
     simulation_directory_name <- simulations_directory[simulation_directory_id]
-    message(format(x = Sys.time(),
-                   "%Y-%m-%d %H:%M:%S"),
-            " - Start data import from simulation directory ",
-            simulation_directory_name)
+    logger::log_info("Start data import from simulation directory {simulation_directory_name}")
     current_simulation_metadata <- list("project_name" = stringr::str_extract(string = simulation_directory_name,
                                                                               pattern =  "(?<=sim_)[[:upper:]]+(?=_)"),
                                         "simulation_configuration" = stringr::str_match(simulation_directory_name,
@@ -306,14 +296,11 @@ outputs_simulations_settings <- function(directory_path,
                                                                        simulation_fishing_mortality_total)
           }
         } else {
-          warning(format(x = Sys.time(),
-                         "%Y-%m-%d %H:%M:%S"),
-                  " - Warning, no referential available for \"",
-                  current_directory_path_files_csv[current_directory_path_files_csv_id],
-                  "\" of the simulation directory name \"",
-                  simulation_directory_name,
-                  "\". Input data avoided.",
-                  immediate. = TRUE)
+          logger::log_warn("No referential available for \"",
+                           current_directory_path_files_csv[current_directory_path_files_csv_id],
+                           "\" of the simulation directory name \"",
+                           simulation_directory_name,
+                           "\". Input data avoided.")
           current_csv_data <- list(NULL)
           names(x = current_csv_data) <- stringr::str_match(string = current_directory_path_files_csv[current_directory_path_files_csv_id],
                                                             pattern = "(.+)\\.csv$")[, 2]
@@ -356,10 +343,7 @@ outputs_simulations_settings <- function(directory_path,
         }
       }
     }
-    message(format(x = Sys.time(),
-                   "%Y-%m-%d %H:%M:%S"),
-            " - Successful data import from simulation directory ",
-            simulation_directory_name)
+    logger::log_info("Successful data import from simulation directory {simulation_directory_name}")
   }
   if ("AbondanceBeginMonth_Gpe_Janvier" %in% names(x = simulation_final$simulations_data_improved_merged)) {
     if ("simulation_abundance_gpe_january" %in% names(x = simulation_final$simulations_data_improved_merged$AbondanceBeginMonth_Gpe_Janvier)) {
@@ -564,7 +548,7 @@ outputs_simulations_settings <- function(directory_path,
                                                                                   simulation_fishing_mortality_total_final)
     }
   }
-  ## 2.x - Output(s) export(s) ----
+  ## Output(s) export(s) ----
   if (! is.null(x = output_path)
       && length(x = simulation_final$simulations_data_improved_merged) != 0) {
     final_output_path <- file.path(output_path,
@@ -587,11 +571,14 @@ outputs_simulations_settings <- function(directory_path,
         }
       }
     }
-    message(format(x = Sys.time(),
-                   "%Y-%m-%d %H:%M:%S"),
-            " - Successful data export in the output directory \"",
-            final_output_path,
-            "\"")
+    write.csv2(x = log_storage,
+               file = file.path(final_output_path,
+                                "log.csv"),
+               row.names = FALSE)
+    logger::log_info("Successful data export in the output directory \"{final_output_path}\"")
   }
+  simulation_final <- append(x = simulation_final,
+                             values = list("log" = log_storage),
+                             after = 0)
   return(simulation_final)
 }
