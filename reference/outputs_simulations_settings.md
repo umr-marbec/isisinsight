@@ -10,7 +10,8 @@ outputs_simulations_settings(
   output_path = NULL,
   output_format = "rds",
   input_colnames = TRUE,
-  input_colnames_ids_names = NULL
+  input_colnames_ids_names = NULL,
+  round_significant_digits = 5L
 )
 ```
 
@@ -45,6 +46,11 @@ outputs_simulations_settings(
   previous argument, this one defines which input contains colname. If
   NULL, all the input contains colname.
 
+- round_significant_digits:
+
+  Mandatory. Default 5. Class integer expected. Round on a number of
+  significant digits. Maximum 21.
+
 ## Value
 
 The function returns a list with a length in relation to the number of
@@ -57,6 +63,5 @@ simulation.
 ``` r
 #replace the value of directory_path by a correct path
 try(outputs_simulations_settings(directory_path = "my/path/to/simulations/directory"))
-#> Error in outputs_simulations_settings(directory_path = "my/path/to/simulations/directory") : 
-#>   2026-06-29 11:24:42 - Error, no input simulation available in the directory path.
+#> Error : Process stopped
 ```

@@ -42,7 +42,8 @@
 <span>  output_path <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  output_format <span class="op">=</span> <span class="st">"rds"</span>,</span>
 <span>  input_colnames <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  input_colnames_ids_names <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  input_colnames_ids_names <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  round_significant_digits <span class="op">=</span> <span class="fl">5L</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -69,6 +70,10 @@
 <dt id="arg-input-colnames-ids-names">input_colnames_ids_names<a class="anchor" aria-label="anchor" href="#arg-input-colnames-ids-names"></a></dt>
 <dd><p>Optional. Default NULL. Class character expected. Related to the previous argument, this one defines which input contains colname. If NULL, all the input contains colname.</p></dd>
 
+
+<dt id="arg-round-significant-digits">round_significant_digits<a class="anchor" aria-label="anchor" href="#arg-round-significant-digits"></a></dt>
+<dd><p>Mandatory. Default 5. Class integer expected. Round on a number of significant digits. Maximum 21.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -79,8 +84,7 @@
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">#replace the value of directory_path by a correct path</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="fu">outputs_simulations_settings</span><span class="op">(</span>directory_path <span class="op">=</span> <span class="st">"my/path/to/simulations/directory"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Error in outputs_simulations_settings(directory_path = "my/path/to/simulations/directory") : </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   2026-06-29 11:24:42 - Error, no input simulation available in the directory path.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Error : Process stopped</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
@@ -93,7 +97,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>
