@@ -223,19 +223,23 @@ outputs_simulations_settings <- function(directory_path,
             names(simulation_catch_weight_fleet_month_cumulative_sums) <- "simulation_catch_weight_fleet_month_cumulative_sums"
             simulation_catch_weight_month_cumulative_sums <- list(dplyr::mutate(.data = simulation_catch_weight_fleet_month[[1]],
                                                                                 year = as.integer(x = (.data$step - 1) / 12 + as.integer(x = stringr::str_extract(string = current_simulation_metadata$simulation_annual_range,
-                                                                                                                                                                  pattern = "^[[:digit:]]+")))) %>%
+                                                                                                                                                                  pattern = "^[[:digit:]]+"))),
+                                                                                scenario_name = !!current_simulation_metadata$scenario_name) %>%
                                                                     dplyr::group_by(.data$population,
                                                                                     .data$year,
-                                                                                    .data$step) %>%
+                                                                                    .data$step,
+                                                                                    .data$scenario_name) %>%
                                                                     dplyr::mutate(catch_total = sum(.data$catch)) %>%
                                                                     dplyr::ungroup() %>%
                                                                     dplyr::select(.data$population,
                                                                                   .data$year,
                                                                                   .data$step,
+                                                                                  .data$scenario_name,
                                                                                   .data$catch_total) %>%
                                                                     dplyr::distinct() %>%
                                                                     dplyr::group_by(.data$population,
-                                                                                    .data$year) %>%
+                                                                                    .data$year,
+                                                                                    .data$scenario_name) %>%
                                                                     dplyr::arrange(.data$step) %>%
                                                                     dplyr::mutate(catch_cumulative = cumsum(x = .data$catch_total)) %>%
                                                                     dplyr::ungroup() %>%
